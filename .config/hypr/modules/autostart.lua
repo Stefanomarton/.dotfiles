@@ -1,0 +1,11 @@
+hl.on("hyprland.start", function ()
+         hl.exec_cmd("wl-paste --watch cliphist store")
+         hl.exec_cmd("nextcloud")
+         hl.exec_cmd("pypr")
+         hl.exec_cmd("hyprpaper")
+         hl.exec_cmd("qs -p ~/personal/projects/quickshell/workspaces/")
+         hl.exec_cmd("qs -p ~/personal/projects/quickshell/corner/")
+         hl.exec_cmd("systemctl start --user polkit-gnome-authentication-agent-1")
+         hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+         
+end)

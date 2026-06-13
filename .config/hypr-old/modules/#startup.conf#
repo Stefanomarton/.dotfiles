@@ -1,0 +1,27 @@
+exec = $scripts_folder/startup.sh
+
+exec-once = hyprpm reload -n
+
+exec-once = ln -s $XDG_RUNTIME_DIR/hypr /tmp/hypr
+
+exec-once = pypr
+
+# Wallpaper setting
+exec-once = hyprpaper
+
+exec-once = hyprctl setcursor macOS-White 35
+
+# exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec-once = systemctl start --user polkit-gnome-authentication-agent-1
+exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+
+# exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+# exec-once = dbus-update-activation-environment --all &
+# exec-once = gnome-keyring-daemon --start --components=secrets &
+
+# exec-once = gsettings set $gnome-schema gtk-theme $colorscheme
+# exec-once = gsettings set $gnome-schema icon-theme $colorscheme
+# exec-once = gsettings set $gnome-schema cursor-theme $colorscheme
+# exec-once = gsettings set $gnome-schema font-name $colorscheme
+# exec-once = gsettings set org.gnome.desktop.interface gtk-key-theme "Emacs"
+# exec-once = gsettings set org.gtk.Settings.FileChooser startup-mode cwd

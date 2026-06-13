@@ -9,7 +9,6 @@ nextcloud &
 disown
 
 # Check VM
-
 ## Define the name of the VM
 vm_name="work"
 
@@ -32,18 +31,6 @@ else
 
 fi
 
-# Check Emacs server
-
-## Emacs server is running helper
-# function is_emacs_server_running() {
-#     emacsclient -e "(message \"\")" >/dev/null 2>&1
-# }
-
-# if ! is_emacs_server_running; then
-#     ## Start emacs server if it's not already running
-#     emacs --daemon
-# fi
-
 # Kmonad
 
 ## Start kmonad if hostname is laptop
@@ -51,13 +38,14 @@ if [ "$(hostnamectl hostname)" = "laptop" ]; then
     sleep 1 && kmonad .config/kmonad/laptop.kbd
 fi
 
-# Eww
-# eww daemon
-#eww open bg-widget
-
 if [ "$(hostnamectl hostname)" = "desktop" ] &&
-    ! pgrep -f "^go-hass-agent run" >/dev/null; then
+    ! pgrep -f "^go-hass-agent-amd64 run" >/dev/null; then
     go-hass-agent run &
 fi
 
-easyeffects
+# quickshell widgets
+qs -p ~/personal/projects/quickshell/workspaces/ &
+disown
+
+qs -p ~/personal/projects/quickshell/corner/ &
+disown

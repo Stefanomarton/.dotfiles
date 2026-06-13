@@ -48,6 +48,7 @@ bindkey "^[[F" end-of-line
 
 alias a="cd"
 alias v="nvim"
+alias emacs="emacs --init-directory=~/.dotfiles/.config/emacs"
 alias ,,="fc -ln -1 | wl-copy"
 alias e="emacsclient -nw"
 alias e="emacsclient --alternate-editor=\"\" $*"
@@ -60,7 +61,7 @@ alias -g ppttopdf="libreoffice --headless --invisible --convert-to pdf"
 # # Variables
 export EDITOR='emacsclient -c'
 export VISUAL='emacsclient -c'
-export BROWSER='chromium'
+# export BROWSER='chromium'
 export PAGER='moor -colors "auto" -no-statusbar'
 export HISTFILE="$XDG_STATE_HOME"/zsh/history
 HISTSIZE=100000000

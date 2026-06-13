@@ -1,14 +1,6 @@
 [pyprland]
-plugins = [
-  "scratchpads",
-  # "lost_windows",
-  # "monitors",
-  # "toggle_dpms",
-  # "magnify",
-  # "expose",
-  # "shift_monitors",
-  # "workspaces_follow_focus",
-]
+plugins = ["scratchpads"]
+hyprland_version = "0.54.0"
 
 [scratchpads.yazi]
 animation = ""
@@ -19,6 +11,7 @@ unfocus = "hide"
 margin = 60
 position = "25% 10%"
 size = "50% 80%"
+match_by = "class"
 
 [scratchpads.term]
 animation = ""
