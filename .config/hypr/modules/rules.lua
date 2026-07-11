@@ -60,3 +60,22 @@ hl.window_rule({
       size = {"(monitor_w*0.5)", "(monitor_h*0.5)"},
       monitor = "DP-1"
 })
+
+
+hl.on("window.title", function(w)
+    local prefix = "Bitwarden"
+    if w.title:sub(1, #prefix) == prefix then
+        local monitor = hl.get_active_monitor()
+        if monitor == nil then
+            return
+        end
+        local win = { width = 500, height = 800 }
+        local pos = {
+            x = math.floor((monitor.width  - win.width)  / 2),
+            y = math.floor((monitor.height - win.height) / 2),
+        }
+        hl.dispatch(hl.dsp.window.float({ action = "enable", window = w }))
+        hl.dispatch(hl.dsp.window.resize({ x = win.width, y = win.height, relative = false, window = w }))
+        hl.dispatch(hl.dsp.window.move({ x = pos.x, y = pos.y, relative = false, window = w }))
+    end
+end)

@@ -2,10 +2,7 @@
 ---- KEYBINDINGS ----
 ---------------------
 
--- Set programs that you use
-local terminal    = "kitty"
-local fileManager = "nemo"
-local mainMod = "SUPER" -- Sets "Windows" key as main modifier
+-- terminal, fileManager and mainMod are defined in modules/vars.lua
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
@@ -17,6 +14,7 @@ hl.bind(mainMod .. "+ SHIFT + Q", hl.dsp.exit())
 
 hl.bind(mainMod .. " + W", hl.dsp.global("quickshell:workspaces"))
 hl.bind(mainMod .. " + P", hl.dsp.global("quickshell:windows"))
+hl.bind(mainMod .. " + R", hl.dsp.global("quickshell:smart"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + j",  hl.dsp.focus({ direction = "left" }))
@@ -34,6 +32,13 @@ for i = 1, 10 do
     hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
     hl.bind(" + ALT + " .. key,     hl.dsp.window.move({ workspace = i, follow=false }))
 end
+
+-- Swap the workspaces currently shown on DP-1 and DP-2
+hl.bind(mainMod .. " + T", hl.dsp.workspace.swap_monitors({ monitor1 = "DP-1", monitor2 = "DP-2" }))
+
+-- Volume (repeats while held; capped at 100%)
+hl.bind(mainMod .. " + Up",   hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { repeating = true })
+hl.bind(mainMod .. " + Down", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),        { repeating = true })
 
 -- Example special workspace (scratchpad)
 hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd("pkill tofi || tofi-run | zsh"))
@@ -61,7 +66,7 @@ hl.define_submap("clean", function()
         hl.bind(mainMod .. " + CTRL + W", function()
         hl.dispatch(hl.dsp.submap("reset"))
         hl.dispatch(hl.dsp.focus({ workspace = "previous_per_monitor" }))
-        end, {long_press = true})
+        end)
 end)
 
 -- screnshoots
@@ -76,30 +81,46 @@ mkdir -p ~/inbox/screenshots && grim -g "$(slurp -d -c 00000000 -b 00000080)" ~/
 ]]))
 
 
-
-local mainMod = "SUPER"
-
--- Helper function to keep our binds clean
+-- Apply a layout to the current workspace. Numbered workspaces are matched by
+-- number ("2"); named ones (negative id) need the "name:" selector.
 local function set_workspace_layout(layout_name)
-    -- 1. Fetch the data for the currently active workspace
-    local active_ws = hl.get_active_workspace()
-    
--- 2. Dynamically apply the workspace rule using the native Lua method
-    hl.workspace_rule({
-        workspace = active_ws.name,
-        layout = layout_name
-    })
+    local ws = hl.get_active_workspace()
+    local selector = ws.name
+    if not tostring(ws.name):match("^%d+$") then
+        selector = "name:" .. ws.name
+    end
+    hl.workspace_rule({ workspace = selector, layout = layout_name })
 end
 
--- Switch current workspace to Master
-hl.bind(mainMod .. " + M", function()
-    set_workspace_layout("lua:custom_center2")
-end, { description = "Set current workspace to Master" })
+-- On-switch HUD via Hyprland's built-in notifications.
+-- Tune the look here: <icon:-1=none> <duration ms> <accent color> <message>.
+local function notify_layout(label, color)
+    hl.dispatch(hl.dsp.exec_cmd(
+        "hyprctl notify -1 1200 '" .. color .. "' 'fontsize:21  " .. label .. "'"))
+end
 
--- Switch current workspace to Scrolling
-hl.bind(mainMod .. " + D", function()
-    set_workspace_layout("scrolling")
-end, { description = "Set current workspace to Scrolling" })
+-- Layout keychord: SUPER + SHIFT + L, then one letter (submap auto-exits).
+--   m = master   f = monocle   s = scrolling   d = dwindle
+hl.bind(mainMod .. " + SHIFT + L", hl.dsp.submap("layout"))
+
+hl.define_submap("layout", function()
+    local function pick(key, layout_name, label, color)
+        local action = function()
+            set_workspace_layout(layout_name)
+            notify_layout(label, color)
+            hl.dispatch(hl.dsp.submap("reset")) -- leave the submap
+        end
+        hl.bind(key, action)               -- shift released
+        hl.bind("SHIFT + " .. key, action) -- ...or still held from entry
+    end
+
+    pick("m", "lua:custom_center2", "Master",    "rgb(89b4fa)")
+    pick("f", "monocle",           "Monocle",   "rgb(cba6f7)")
+    pick("s", "scrolling",         "Scrolling", "rgb(a6e3a1)")
+    pick("d", "dwindle",           "Dwindle",   "rgb(fab387)")
+
+    hl.bind("escape", hl.dsp.submap("reset")) -- cancel
+end)
 
 
 
@@ -115,9 +136,6 @@ hl.bind(mainMod .. "+ SHIFT + j",
 
 hl.bind(mainMod .. "+ SHIFT + k",
         hl.dsp.window.resize({x = 200, y = 0, relative = true}))
-
-hl.bind(mainMod .. "+ SHIFT + l",
-        hl.dsp.window.resize({x = -200, y = 0, relative = true}))
 
 
 -- hl.bind(mainMod .. " + comma", hl.dsp.layout("swapcol l"))jjj
