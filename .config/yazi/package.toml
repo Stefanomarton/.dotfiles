@@ -1,17 +1,17 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:full-border"
-rev = "de33976"
-hash = "3996fc74044bc44144b323686f887e1"
+rev = "598cdb6"
+hash = "7b625412411be411153886894d9acaf"
 
 [[plugin.deps]]
 use = "hankertrix/augment-command"
-rev = "7c12bdf"
-hash = "f7e6d377e4efee567ec6d1c2355f2ca3"
+rev = "18ad50f"
+hash = "cba2bae0c4ad211f4219de550b3838a5"
 
 [[plugin.deps]]
 use = "KKV9/compress"
-rev = "13e89fb"
-hash = "b6e2e69e13ba419f68140910900cbbcd"
+rev = "e60e122"
+hash = "fbaf0adc8efc59555b748d36aab62d40"
 
 [flavor]
 deps = []
