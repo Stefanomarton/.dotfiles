@@ -536,7 +536,7 @@ desc = "Jump to a bookmark"
 
 [[mgr.prepend_keymap]]
 on = ["<C-n>"]
-run = """shell 'xdragon -T -x -A "$@" & pypr hide yazi' --confirm"""
+run = """shell 'xdragon -T -x -A %s & pypr hide yazi' --confirm"""
 desc = ""
 
 [[mgr.prepend_keymap]]
