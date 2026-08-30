@@ -10,11 +10,18 @@ hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | tofi | cliphist decode | wl-copy"))
 
+hl.bind(mainMod .. " + ALT + D", hl.dsp.exec_cmd("hyprwhspr-rs record toggle"))
+
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
 hl.bind(mainMod .. "+ SHIFT + Q", hl.dsp.exit())
 
 hl.bind(mainMod .. " + W", hl.dsp.global("quickshell:workspaces"))
 hl.bind(mainMod .. " + P", hl.dsp.global("quickshell:windows"))
 hl.bind(mainMod .. " + R", hl.dsp.global("quickshell:smart"))
+hl.bind(mainMod .. " + M", hl.dsp.global("quickshell:movewindow"))
+hl.bind(mainMod .. " + E", hl.dsp.global("quickshell:expose"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + j",  hl.dsp.focus({ direction = "left" }))
@@ -51,7 +58,7 @@ hl.bind(mainMod .. " + C",         hl.dsp.exec_cmd("pypr toggle qalc"))
 hl.bind(mainMod .. "+ SHIFT + E",         hl.dsp.exec_cmd("emacs"))
 hl.bind(mainMod .. "+ SHIFT + F",         hl.dsp.exec_cmd("chromium"))
 
-hl.bind(mainMod .. "+ SHIFT + M",         hl.dsp.window.fullscreen())
+hl.bind(mainMod .. "+ F",         hl.dsp.window.fullscreen())
 
 
 -- Entering the submap

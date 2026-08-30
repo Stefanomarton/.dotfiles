@@ -79,3 +79,19 @@ hl.on("window.title", function(w)
         hl.dispatch(hl.dsp.window.move({ x = pos.x, y = pos.y, relative = false, window = w }))
     end
 end)
+
+
+--------------------
+---- LAYER RULES ----
+--------------------
+
+-- Modal backdrop: when a picker is open, blur the WHOLE desktop behind it so it
+-- stands out (paired with the dim scrim, Theme.dimAround). ignore_alpha = 0 blurs
+-- the full-screen overlay, not just the card. Only the pickers (not the always-on
+-- corner or the transient volume OSD).
+hl.layer_rule({
+    name  = "widget-blur",
+    match = { namespace = "^(smart-picker|workspaces-picker|window-picker|move-window-picker|expose)$" },
+    blur         = true,
+    ignore_alpha = 0.0,
+})

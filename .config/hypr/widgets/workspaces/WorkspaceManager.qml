@@ -57,6 +57,8 @@ QtObject {
                             id: ws.id,
                             name: ws.name,
                             windows: ws.windows ?? 0,
+                            monitor: ws.monitor ?? "",
+                            monitorID: ws.monitorID ?? -1,
                             windowList: []  // Will be populated by clients fetch
                         })
                     }
@@ -98,6 +100,8 @@ QtObject {
                             id: baseList[i].id,
                             name: baseList[i].name,
                             windows: baseList[i].windows,
+                            monitor: baseList[i].monitor,
+                            monitorID: baseList[i].monitorID,
                             windowList: []
                         })
                     }

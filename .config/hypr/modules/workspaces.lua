@@ -31,12 +31,13 @@ setups.desktop = function()
 
     -- Tasks workspace: monocle (one window at a time, fills the screen)
     hl.workspace_rule({
-        workspace = "tasks",
+        workspace = "name:tasks",
         monitor   = "HDMI-A-1",
         gaps_in   = 0,
         gaps_out  = 0,
         layout    = "monocle",
         on_created_empty = "ticktick",
+        persistent = true,
     })
 end
 

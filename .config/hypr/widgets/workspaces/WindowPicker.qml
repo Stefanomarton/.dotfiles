@@ -32,7 +32,7 @@ PanelWindow {
     WlrLayershell.namespace: "window-picker"
 
     exclusionMode: ExclusionMode.Ignore
-    color: "transparent"
+    color: Qt.rgba(0, 0, 0, Theme.dimAround)   // dims the backdrop (blurred via layer_rule)
 
     // Warm up the Wayland toplevel manager for live preview captures.
     Component.onCompleted: { var warm = ToplevelManager.toplevels }
@@ -612,10 +612,17 @@ PanelWindow {
             return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) }
         }
 
-        visible: Config.pickerWorkspacePreview && wsName !== "" && wsWindows.length > 0 && frame !== null
+        // Content only when the highlighted window's workspace has windows; the
+        // pane always reserves its space so nothing shifts while searching.
+        readonly property bool hasPreview: wsName !== "" && wsWindows.length > 0 && frame !== null
+        visible: Config.pickerWorkspacePreview
 
         readonly property int pad: 16
-        readonly property real aspect: frame ? (frame.height / frame.width) : (9 / 16)
+        // Reserve a fixed size from the picker screen's aspect ratio, so the
+        // preview box never resizes as the highlighted window changes.
+        readonly property real aspect: picker.screen && picker.screen.width > 0
+            ? picker.screen.height / picker.screen.width
+            : (9 / 16)
         readonly property real mapW: Math.min(Config.pickerPreviewWidth - pad * 2, Config.pickerPreviewHeight / aspect)
         readonly property real mapH: mapW * aspect
 
@@ -655,6 +662,7 @@ PanelWindow {
                 }
                 Text {
                     id: countLabel
+                    visible: previewPane.hasPreview
                     text: previewPane.wsWindows.length + (previewPane.wsWindows.length === 1 ? " window" : " windows")
                     color: Theme.pickerSecondaryText
                     font.pixelSize: 14
@@ -670,7 +678,7 @@ PanelWindow {
                 clip: true
 
                 Repeater {
-                    model: previewPane.wsWindows
+                    model: previewPane.hasPreview ? previewPane.wsWindows : []
 
                     delegate: Rectangle {
                         id: tile
@@ -685,8 +693,8 @@ PanelWindow {
 
                         radius: Theme.radius
                         color: Theme.pickerItemHover
-                        border.color: isSelected ? Theme.base0B : Theme.pickerBorder
-                        border.width: isSelected ? 3 : 1
+                        border.color: isSelected ? Theme.accent2 : Theme.outline
+                        border.width: isSelected ? Theme.borderWidth : Theme.borderWidthInner
                         clip: true
                         z: isSelected ? 1 : 0
 

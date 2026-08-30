@@ -4,10 +4,12 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
+// Move the focused window to a workspace you pick.
+// Enter = move (stay) · Shift+Enter = move + follow · Esc = cancel.
 PanelWindow {
     id: picker
 
-    visible: WorkspaceManager.pickerVisible
+    visible: MoveWindowManager.pickerVisible
 
     // Show on configured monitor
     screen: {
@@ -29,13 +31,12 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    WlrLayershell.namespace: "workspaces-picker"
+    WlrLayershell.namespace: "move-window-picker"
 
     exclusionMode: ExclusionMode.Ignore
     color: Qt.rgba(0, 0, 0, Theme.dimAround)   // dims the backdrop (blurred via layer_rule)
 
-    // Warm up the Wayland toplevel manager at shell startup so live window
-    // captures in the workspace preview are ready the moment the picker opens.
+    // Warm up the Wayland toplevel manager for live preview captures.
     Component.onCompleted: { var warm = ToplevelManager.toplevels }
 
     // Click-outside-to-close (delayed to allow focus to settle)
@@ -55,7 +56,7 @@ PanelWindow {
     HyprlandFocusGrab {
         windows: [picker]
         active: picker.focusGrabActive
-        onCleared: WorkspaceManager.hide()
+        onCleared: MoveWindowManager.hide()
     }
 
     // Main card container
@@ -70,7 +71,7 @@ PanelWindow {
         }
         width: Config.pickerWidth
         height: {
-            var natural = 30 + Config.pickerInputHeight + 16 + listContainer.implicitHeight + hintsRow.height + 32
+            var natural = 30 + titleColumn.height + Config.pickerInputHeight + 16 + listContainer.implicitHeight + hintsRow.height + 32
             var cap = Config.pickerMaxHeight
             if (previewPane.visible)
                 cap = Math.min(cap, picker.height - previewPane.height - 60)
@@ -93,17 +94,31 @@ PanelWindow {
             anchors.margins: 12
             spacing: 8
 
-            // Title
-            Text {
-                text: "Workspaces"
-                color: Theme.pickerText
-                font.pixelSize: 14
-                font.bold: true
+            // Title + which window is being moved
+            ColumnLayout {
+                id: titleColumn
                 Layout.alignment: Qt.AlignHCenter
                 Layout.bottomMargin: 4
+                spacing: 1
+
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: "Move window → workspace"
+                    color: Theme.base0A
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: "moving: " + (MoveWindowManager.currentWindowTitle || "(no focused window)")
+                    color: Theme.pickerSecondaryText
+                    font.pixelSize: 12
+                    elide: Text.ElideRight
+                    Layout.maximumWidth: card.width - 40
+                }
             }
 
-            // Search/create input
+            // Search/filter input
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Config.pickerInputHeight
@@ -122,119 +137,45 @@ PanelWindow {
                     selectByMouse: true
                     clip: true
 
-                    text: WorkspaceManager.filterText
-                    onTextChanged: WorkspaceManager.filterText = text
+                    text: MoveWindowManager.filterText
+                    onTextChanged: MoveWindowManager.filterText = text
 
-                    // Placeholder
                     Text {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
-                        text: "Search or create workspace..."
+                        text: "Search or type a new workspace..."
                         color: Theme.pickerPlaceholder
                         font.pixelSize: Config.pickerFontSize
                         visible: !searchInput.text && !searchInput.activeFocus
                     }
 
                     Keys.onUpPressed: {
-                        if (WorkspaceManager.selectedIndex > 0) {
-                            WorkspaceManager.selectedIndex--
-                        }
+                        if (MoveWindowManager.selectedIndex > 0)
+                            MoveWindowManager.selectedIndex--
                     }
-
                     Keys.onDownPressed: {
-                        if (WorkspaceManager.selectedIndex < WorkspaceManager.filteredWorkspaces.length - 1) {
-                            WorkspaceManager.selectedIndex++
-                        }
+                        if (MoveWindowManager.selectedIndex < MoveWindowManager.filteredWorkspaces.length - 1)
+                            MoveWindowManager.selectedIndex++
                     }
 
+                    // Enter = move (stay), Shift+Enter = move + follow
                     Keys.onReturnPressed: function(event) {
-                        if (event.modifiers & Qt.AltModifier) {
-                            handleMoveToCurrent()
-                        } else {
-                            handleSelect(event.modifiers & Qt.ControlModifier)
-                        }
+                        MoveWindowManager.moveToSelected((event.modifiers & Qt.ShiftModifier) !== 0)
                     }
-
                     Keys.onEnterPressed: function(event) {
-                        if (event.modifiers & Qt.AltModifier) {
-                            handleMoveToCurrent()
-                        } else {
-                            handleSelect(event.modifiers & Qt.ControlModifier)
-                        }
+                        MoveWindowManager.moveToSelected((event.modifiers & Qt.ShiftModifier) !== 0)
                     }
 
-                    Keys.onEscapePressed: {
-                        WorkspaceManager.hide()
-                    }
+                    Keys.onEscapePressed: MoveWindowManager.hide()
 
-                    Keys.onDeletePressed: {
-                        handleDestroy()
-                    }
-
-                    // Ctrl+D for destroy
-                    Keys.onPressed: function(event) {
-                        if (event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier)) {
-                            handleDestroy()
-                            event.accepted = true
-                        }
-                    }
-
-                    function handleSelect(moveToOtherMonitor) {
-                        var filtered = WorkspaceManager.filteredWorkspaces
-                        if (filtered.length > 0 && WorkspaceManager.selectedIndex < filtered.length) {
-                            var ws = filtered[WorkspaceManager.selectedIndex]
-                            if (moveToOtherMonitor) {
-                                // Move to configured target monitor (or auto-detect)
-                                WorkspaceManager.moveToMonitor(ws.name, Config.moveWorkspaceTargetMonitor)
-                            } else {
-                                // Switch to selected workspace
-                                WorkspaceManager.switchTo(ws.name)
-                            }
-                        } else if (searchInput.text.trim()) {
-                            // Create new workspace with input text
-                            WorkspaceManager.createAndSwitch(searchInput.text.trim())
-                        }
-                    }
-
-                    function handleMoveToCurrent() {
-                        var filtered = WorkspaceManager.filteredWorkspaces
-                        if (filtered.length > 0 && WorkspaceManager.selectedIndex < filtered.length) {
-                            var ws = filtered[WorkspaceManager.selectedIndex]
-                            WorkspaceManager.moveToCurrentAndFocus(ws.name)
-                        }
-                    }
-
-                    function handleDestroy() {
-                        var filtered = WorkspaceManager.filteredWorkspaces
-                        if (filtered.length > 0 && WorkspaceManager.selectedIndex < filtered.length) {
-                            var ws = filtered[WorkspaceManager.selectedIndex]
-                            // Don't destroy excluded workspaces (they shouldn't appear anyway, but safety check)
-                            var excluded = Config.pickerExcludedWorkspaces
-                            var isExcluded = false
-                            for (var i = 0; i < excluded.length; i++) {
-                                if (ws.name === excluded[i]) {
-                                    isExcluded = true
-                                    break
-                                }
-                            }
-                            if (!isExcluded) {
-                                WorkspaceManager.destroyWorkspace(ws.name)
-                            }
-                        }
-                    }
-
-                    Component.onCompleted: {
-                        forceActiveFocus()
-                    }
+                    Component.onCompleted: forceActiveFocus()
                 }
 
-                // Ensure focus when picker becomes visible
                 Connections {
-                    target: WorkspaceManager
+                    target: MoveWindowManager
                     function onPickerVisibleChanged() {
-                        if (WorkspaceManager.pickerVisible) {
+                        if (MoveWindowManager.pickerVisible)
                             searchInput.forceActiveFocus()
-                        }
                     }
                 }
             }
@@ -251,8 +192,6 @@ PanelWindow {
                 implicitHeight: {
                     var natural = Math.max(workspaceList.contentHeight, 80)
                     var cap = Config.pickerMaxHeight - 30 - Config.pickerInputHeight - hintsRow.height - 56
-                    // Cap to a few rows when the preview is shown, so the list
-                    // stays a fixed height and the preview below doesn't shift.
                     if (Config.pickerWorkspacePreview)
                         cap = Math.min(cap, Config.pickerWorkspaceVisibleRows * 108)
                     return Math.min(natural, cap)
@@ -262,11 +201,10 @@ PanelWindow {
                     id: workspaceList
                     anchors.fill: parent
                     anchors.margins: 4
-                    model: WorkspaceManager.filteredWorkspaces
-                    currentIndex: WorkspaceManager.selectedIndex
+                    model: MoveWindowManager.filteredWorkspaces
+                    currentIndex: MoveWindowManager.selectedIndex
                     clip: true
 
-                    // Keep the highlighted row scrolled into view.
                     onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
                     delegate: Rectangle {
@@ -277,7 +215,7 @@ PanelWindow {
                         width: workspaceList.width
                         height: hasWindows ? expandedHeight : compactHeight
                         radius: Theme.radius
-                        color: index === WorkspaceManager.selectedIndex
+                        color: index === MoveWindowManager.selectedIndex
                                ? Theme.pickerItemSelected
                                : itemMouseArea.containsMouse
                                  ? Theme.pickerItemHover
@@ -296,12 +234,10 @@ PanelWindow {
                             anchors.bottomMargin: 8
                             spacing: 4
 
-                            // Top row: workspace name and window count
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: 8
 
-                                // Workspace name
                                 Text {
                                     Layout.fillWidth: true
                                     text: itemDelegate.modelData.name
@@ -310,8 +246,6 @@ PanelWindow {
                                     font.bold: true
                                     elide: Text.ElideRight
                                 }
-
-                                // Window count
                                 Text {
                                     text: itemDelegate.modelData.windows + " window" + (itemDelegate.modelData.windows !== 1 ? "s" : "")
                                     color: Theme.pickerSecondaryText
@@ -319,18 +253,16 @@ PanelWindow {
                                 }
                             }
 
-                            // Window list row (icons + names)
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: 12
                                 visible: itemDelegate.hasWindows
 
                                 Repeater {
-                                    model: Math.min(itemDelegate.windowCount, 4)  // Show up to 4 windows
+                                    model: Math.min(itemDelegate.windowCount, 4)
 
                                     RowLayout {
                                         spacing: 6
-
                                         Image {
                                             Layout.preferredWidth: 18
                                             Layout.preferredHeight: 18
@@ -340,12 +272,11 @@ PanelWindow {
                                             smooth: true
                                             mipmap: true
                                         }
-
                                         Text {
-                                            text: itemDelegate.modelData.windowList[index]?.title || 
-                                                  itemDelegate.modelData.windowList[index]?.class || 
+                                            text: itemDelegate.modelData.windowList[index]?.title ||
+                                                  itemDelegate.modelData.windowList[index]?.class ||
                                                   "Window"
-                                            color: index === WorkspaceManager.selectedIndex ? Theme.pickerText : Theme.pickerSecondaryText
+                                            color: Theme.pickerSecondaryText
                                             font.pixelSize: 13
                                             elide: Text.ElideRight
                                             Layout.maximumWidth: 120
@@ -353,7 +284,6 @@ PanelWindow {
                                     }
                                 }
 
-                                // "+N more" indicator if there are more windows
                                 Text {
                                     visible: itemDelegate.windowCount > 4
                                     text: "+" + (itemDelegate.windowCount - 4) + " more"
@@ -367,10 +297,10 @@ PanelWindow {
                             id: itemMouseArea
                             anchors.fill: parent
                             hoverEnabled: true
-
-                            onClicked: {
-                                WorkspaceManager.selectedIndex = itemDelegate.index
-                                WorkspaceManager.switchTo(itemDelegate.modelData.name)
+                            onClicked: function(mouse) {
+                                MoveWindowManager.selectedIndex = itemDelegate.index
+                                MoveWindowManager.moveToWorkspace(itemDelegate.modelData.name,
+                                                                  (mouse.modifiers & Qt.ShiftModifier) !== 0)
                             }
                         }
                     }
@@ -378,8 +308,8 @@ PanelWindow {
                     // Empty state
                     Text {
                         anchors.centerIn: parent
-                        text: WorkspaceManager.filterText
-                              ? "Press Enter to create \"" + WorkspaceManager.filterText + "\""
+                        text: MoveWindowManager.filterText
+                              ? "Press Enter to move to new \"" + MoveWindowManager.filterText + "\""
                               : "No workspaces"
                         color: Theme.pickerSecondaryText
                         font.pixelSize: Config.pickerFontSize
@@ -402,39 +332,19 @@ PanelWindow {
                     font.bold: true
                 }
                 Text {
-                    text: "Enter Select"
-                    color: Theme.pickerSecondaryText
-                    font.pixelSize: 13
-                    font.bold: true
-                }
-                Text {
-                    text: {
-                        var target = Config.moveWorkspaceTargetMonitor
-                        if (target === "auto") {
-                            target = WorkspaceManager.availableMonitors.length > 0 ? WorkspaceManager.availableMonitors[0] : "other"
-                        }
-                        return "Ctrl+Enter → " + target
-                    }
-                    color: Theme.pickerSecondaryText
-                    font.pixelSize: 13
-                    font.bold: true
-                    visible: WorkspaceManager.availableMonitors.length > 0
-                }
-                Text {
-                    text: "Alt+Enter → Here"
-                    color: Theme.pickerSecondaryText
-                    font.pixelSize: 13
-                    font.bold: true
-                    visible: WorkspaceManager.availableMonitors.length > 0
-                }
-                Text {
-                    text: "Del Destroy"
+                    text: "Enter Move"
                     color: Theme.base0A
                     font.pixelSize: 13
                     font.bold: true
                 }
                 Text {
-                    text: "Esc Close"
+                    text: "Shift+Enter Move+Follow"
+                    color: Theme.base0A
+                    font.pixelSize: 13
+                    font.bold: true
+                }
+                Text {
+                    text: "Esc Cancel"
                     color: Theme.pickerHintText
                     font.pixelSize: 13
                 }
@@ -442,23 +352,19 @@ PanelWindow {
         }
     }
 
-    // === Workspace layout preview (live mini-map) ===
-    // Draws the highlighted workspace's window layout beside the picker, each
-    // window a tile filled with a live capture (icon fallback).
+    // === Target-workspace layout preview (live mini-map) ===
     Rectangle {
         id: previewPane
 
         property var wsItem: {
-            var f = WorkspaceManager.filteredWorkspaces
-            var idx = WorkspaceManager.selectedIndex
+            var f = MoveWindowManager.filteredWorkspaces
+            var idx = MoveWindowManager.selectedIndex
             if (f.length > 0 && idx >= 0 && idx < f.length) return f[idx]
             return null
         }
-        property var wsWindows: wsItem ? WorkspaceManager.windowsForWorkspace(wsItem.name) : []
-        property var mon: wsItem ? WorkspaceManager.monitorForWorkspace(wsItem.name) : null
+        property var wsWindows: wsItem ? MoveWindowManager.windowsForWorkspace(wsItem.name) : []
+        property var mon: wsItem ? MoveWindowManager.monitorForWorkspace(wsItem.name) : null
 
-        // Coordinate frame to normalize against: the real monitor, or (fallback)
-        // the bounding box of the workspace's windows.
         property var frame: {
             if (mon && mon.width > 0 && mon.height > 0) return mon
             if (wsWindows.length === 0) return null
@@ -529,7 +435,6 @@ PanelWindow {
                 }
             }
 
-            // Mini-map canvas
             Rectangle {
                 width: previewPane.mapW
                 height: previewPane.mapH

@@ -15,6 +15,13 @@ QtObject {
     readonly property int radius: 0
     // Frame border thickness (px) — the bright cyan outline, like the corner.
     readonly property int borderWidth: 2
+    // Internal element borders (preview tiles, etc.) — thinner than the frame.
+    readonly property int borderWidthInner: 1
+
+    // Modal backdrop for the pickers: when one is open, everything behind it is
+    // dimmed (this scrim) + blurred (the Hyprland layer_rule in modules/rules.lua)
+    // so you focus on the widget — like dim_around. 0.0 = no dim, 1.0 = black.
+    readonly property real dimAround: 0.45
 
     // ── Grayscale base (Black Metal) ────────────────────────────────────────
     readonly property color base00: "#000000"

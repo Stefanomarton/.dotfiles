@@ -51,6 +51,10 @@ QtObject {
     readonly property int pickerSmartVisibleRows: 4
     readonly property int pickerWindowVisibleRows: 6
 
+    // Exposé overview: width of each workspace mini-map cell (height follows the
+    // monitor's aspect ratio). Bigger = fewer cells per row.
+    readonly property int exposeCellWidth: 480
+
     // Picker UI
     readonly property int pickerWidth: 750
     readonly property int pickerMaxHeight: 1200

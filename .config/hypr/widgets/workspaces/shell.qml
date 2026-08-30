@@ -25,6 +25,20 @@ ShellRoot {
         onPressed: SmartPickerManager.toggle()
     }
 
+    // GlobalShortcut for move-window picker
+    GlobalShortcut {
+        name: "movewindow"
+        description: "Move focused window to a chosen workspace"
+        onPressed: MoveWindowManager.toggle()
+    }
+
+    // GlobalShortcut for Exposé overview
+    GlobalShortcut {
+        name: "expose"
+        description: "Toggle Exposé-style workspace overview"
+        onPressed: ExposeManager.toggle()
+    }
+
     // Workspace picker popup
     WorkspacePicker {}
 
@@ -33,4 +47,10 @@ ShellRoot {
 
     // Smart unified picker popup
     SmartPicker {}
+
+    // Move-window picker popup
+    MoveWindowPicker {}
+
+    // Exposé overview
+    Expose {}
 }
