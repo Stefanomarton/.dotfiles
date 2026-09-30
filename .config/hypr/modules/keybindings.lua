@@ -40,8 +40,8 @@ for i = 1, 10 do
     hl.bind(" + ALT + " .. key,     hl.dsp.window.move({ workspace = i, follow=false }))
 end
 
--- Swap the workspaces currently shown on DP-1 and DP-2
-hl.bind(mainMod .. " + T", hl.dsp.workspace.swap_monitors({ monitor1 = "DP-1", monitor2 = "DP-2" }))
+-- Swap the windows between the workspaces active on DP-1 and DP-2
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("~/.config/hypr/scripts/swap_monitor_windows.sh"))
 
 -- Volume (repeats while held; capped at 100%)
 hl.bind(mainMod .. " + Up",   hl.dsp.exec_cmd("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { repeating = true })

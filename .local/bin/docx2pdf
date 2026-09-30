@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# docx2pdf — converte in PDF i .docx (e tutto quello che LibreOffice sa aprire).
+#
+#   docx2pdf FILE.docx [ALTRI...]      PDF accanto all'originale
+#   docx2pdf CARTELLA                  tutti i .docx della cartella
+#   docx2pdf -o DEST FILE...           PDF dentro DEST
+#   docx2pdf --sezioni FILE...         header con la sezione corrente (SDS EpyX)
+#
+# Gira su un profilo LibreOffice separato: con la finestra di LibreOffice gia'
+# aperta, --convert-to esce 0 senza convertire niente.
+set -euo pipefail
+
+dest=""
+sezioni=0
+args=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o|--outdir) dest="$2"; shift 2 ;;
+    -s|--sezioni) sezioni=1; shift ;;
+    -h|--help)   sed -n '3,7p' "$0"; exit 0 ;;
+    *)           args+=("$1"); shift ;;
+  esac
+done
+[ ${#args[@]} -gt 0 ] || { sed -n '3,7p' "$0" >&2; exit 1; }
+
+file=()
+for a in "${args[@]}"; do
+  if [ -d "$a" ]; then
+    while IFS= read -r -d '' f; do file+=("$f"); done \
+      < <(find "$a" -maxdepth 1 -name '*.docx' -print0 | sort -z)
+  else
+    file+=("$a")
+  fi
+done
+
+profilo="${TMPDIR:-/tmp}/docx2pdf-profilo-$USER"
+copie=""
+if [ "$sezioni" = 1 ]; then copie=$(mktemp -d); trap 'rm -rf "$copie"' EXIT; fi
+stato=0
+for f in "${file[@]}"; do
+  out="${dest:-$(dirname "$f")}"
+  mkdir -p "$out"
+  src="$f"
+  if [ "$sezioni" = 1 ]; then
+    # il campo SECTION dell'header lo calcola solo Word: si converte una copia
+    # in cui e' diventato uno STYLEREF, che LibreOffice sa calcolare
+    src="$copie/$(basename "$f")"
+    "$(dirname "$0")/docx-sezioni" "$f" "$src" >/dev/null
+  fi
+  soffice --headless --norestore "-env:UserInstallation=file://$profilo" \
+          --convert-to pdf --outdir "$out" "$src" >/dev/null 2>&1 || true
+  pdf="$out/$(basename "${f%.*}").pdf"
+  # soffice esce 0 anche quando non scrive niente: l'unica prova e' il file
+  if [ -s "$pdf" ]; then printf '%s\n' "$pdf"
+  else printf 'FALLITO: %s\n' "$f" >&2; stato=1; fi
+done
+exit $stato

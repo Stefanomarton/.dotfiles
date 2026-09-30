@@ -161,14 +161,14 @@ desc = "Open the selected files interactively"
 [[mgr.keymap]]
 on = ["e"]
 run = """
-shell  --block --confirm 'emacsclient -t "$@"'
+shell  --block --confirm 'emacsclient -t %s'
 """
 desc = "Open the selected files"
 
 [[mgr.keymap]]
 on = ["E"]
 run = """
-shell --confirm 'emacsclient -c "$@"'
+shell --confirm 'emacsclient -c %s'
 """
 desc = "Open the selected files"
 
@@ -621,6 +621,11 @@ desc = "Rename bookmark by fzf"
 on = ["u", "u", "o"]
 run = """shell 'python ~/move_to_obsolete.py "$@"' --confirm --block"""
 desc = "move to obsolete"
+
+[[mgr.prepend_keymap]]
+on = ["u", "u", "r"]
+run = """shell 'python3 ~/.local/bin/registro.py %s' --confirm --block"""
+desc = "SDS: righe registro negli appunti"
 
 # chmod plugin
 [[mgr.prepend_keymap]]

@@ -13,5 +13,10 @@ use = "KKV9/compress"
 rev = "e60e122"
 hash = "fbaf0adc8efc59555b748d36aab62d40"
 
+[[plugin.deps]]
+use = "macydnah/office"
+rev = "41ebef8"
+hash = "5805affd3ae8adcb3c72b6997d21c0a6"
+
 [flavor]
 deps = []

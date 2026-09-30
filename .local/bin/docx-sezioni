@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""Rende leggibile a LibreOffice il numero di sezione nell'header di una SDS EpyX.
+
+EpyX mette in header il campo Word `{ SECTION }`, che solo Word ricalcola: LibreOffice
+non lo implementa e stampa il segnaposto in cache, "#SECTION#". Qui il campo viene
+scambiato con `{ STYLEREF "SectionTitle" }`, che LibreOffice *sa* calcolare, e lo stile
+SectionTitle — che EpyX definisce ma non applica, ed e' vuoto, quindi non cambia
+l'aspetto — viene messo sui 16 titoli "Sezione N ...". In header finisce il titolo
+intero della sezione corrente ("Sezione 3  Composizione/informazioni sugli ingredienti").
+
+    docx-sezioni ORIGINALE.docx COPIA.docx
+
+L'originale non si tocca: e' il passo che `docx2pdf --sezioni` fa su una copia
+temporanea prima di convertire. Un header per sezione non funzionerebbe: le 16
+sezioni sono `continuous`, e LibreOffice lega l'header alla pagina, non alla sezione.
+"""
+import re
+import sys
+import zipfile
+from pathlib import Path
+
+TITOLO = re.compile(r"Sezione \d+ ")
+STILE = '<w:pStyle w:val="SectionTitle" />'
+CAMPO = re.compile(r'<w:r><w:rPr /><w:t xml:space="preserve">Sezione </w:t></w:r>'
+                   r'<w:fldSimple w:instr=" SECTION ">.*?</w:fldSimple>', re.S)
+NUOVO = ('<w:fldSimple w:instr=\' STYLEREF "SectionTitle" \'>'
+         '<w:r><w:rPr /><w:t xml:space="preserve">Sezione</w:t></w:r></w:fldSimple>')
+
+
+def stila(p):
+    """Mette lo stile SectionTitle sul paragrafo, se e' un titolo di sezione."""
+    testo = "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", p))
+    if not TITOLO.match(testo) or STILE in p:
+        return p
+    if "<w:pPr>" in p:
+        return p.replace("<w:pPr>", "<w:pPr>" + STILE, 1)
+    return p.replace("<w:p>", f"<w:p><w:pPr>{STILE}</w:pPr>", 1)
+
+
+def converti(src, dst):
+    """Scrive `dst`. Ritorna quanti titoli ha stilato (0 = niente da fare)."""
+    with zipfile.ZipFile(src) as z:
+        parti = {n: z.read(n) for n in z.namelist()}
+        ordine = z.infolist()
+    doc = parti["word/document.xml"].decode("utf-8")
+    hdr = parti["word/header1.xml"].decode("utf-8")
+
+    doc = re.sub(r"<w:p>(?:(?!</w:p>).)*?</w:p>", lambda m: stila(m.group()), doc, flags=re.S)
+    n = doc.count(STILE)
+    parti["word/document.xml"] = doc.encode("utf-8")
+    parti["word/header1.xml"] = CAMPO.sub(NUOVO, hdr).encode("utf-8")
+
+    with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as out:
+        for e in ordine:
+            out.writestr(e, parti[e.filename])
+    return n
+
+
+def main():
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
+    n = converti(Path(sys.argv[1]), Path(sys.argv[2]))
+    print(f"{Path(sys.argv[1]).name}: {n} titoli di sezione")
+
+
+if __name__ == "__main__":
+    main()
