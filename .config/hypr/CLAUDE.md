@@ -29,7 +29,8 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
 - Super+P = rofi-rbw su rofi, tema in `.config/rofi/config.rasi` (fuzzel 1.14 non ha più
   `--override`, che rofi-rbw usa per le scorciatoie). Bitwarden via rbw; rbw, rofi e `SSH_AUTH_SOCK` in
   `~/.nixos/modules/web.nix`). Al login `~/.local/bin/secrets-sync` (autostart) sblocca il vault
-  e scrive le chiavi API in RAM: elenco e regole nello script.
+  e scrive le chiavi API in RAM; l'elenco è nel vault (cartella `desktop`, username = percorso),
+  un segreto nuovo si aggiunge con `~/.local/bin/secret-put`.
 - Super+B = `~/.local/bin/rdp-borsini`: VM Windows di Borsini in Remmina (profilo salvato),
   password dal vault (`rdp borsini`) scritta in una copia del profilo in RAM.
 
