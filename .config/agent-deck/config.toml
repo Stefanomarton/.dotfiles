@@ -6,6 +6,7 @@ theme = "dark"
 
 [claude]
   config_dir = "~/.claude-profiles/personal"
+  command = "claude-personal" # via cpm: arrivano le variabili di secrets.toml
   dangerous_mode = true
 
 [global_search]
@@ -28,3 +29,4 @@ theme = "dark"
 [tmux]
   # The web UI and the TUI already show title, group and status: no tmux bar.
   inject_status_line = false
+
