@@ -25,9 +25,18 @@ ShellRoot {
         onPressed: {
             SmartPickerManager.hide()
             ExposeManager.hide()
+            clipboard.hide()
         }
+    }
+
+    // Clipboard history (Super+V)
+    GlobalShortcut {
+        name: "clipboard"
+        description: "Toggle the clipboard picker"
+        onPressed: clipboard.toggle()
     }
 
     SmartPicker {}
     Expose {}
+    ClipboardPicker { id: clipboard }
 }

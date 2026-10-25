@@ -135,7 +135,7 @@ end)
 -- corner or the transient volume OSD).
 hl.layer_rule({
     name  = "widget-blur",
-    match = { namespace = "^(smart-picker|expose)$" },
+    match = { namespace = "^(smart-picker|expose|clipboard-picker)$" },
     blur         = true,
     ignore_alpha = 0.0,
 })
@@ -143,7 +143,7 @@ hl.layer_rule({
 -- Pickers and the focus frame appear at once: without this, layersIn inherits the global speed 8 (800 ms popin)
 hl.layer_rule({
     name    = "picker-no-anim",
-    match   = { namespace = "^(smart-picker|expose|focus-frame)$" },
+    match   = { namespace = "^(smart-picker|expose|clipboard-picker|focus-frame)$" },
     no_anim = true,
 })
 

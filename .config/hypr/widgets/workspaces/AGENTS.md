@@ -13,6 +13,8 @@ SmartPickerManager.qml  Smart data (Quickshell.Hyprland, DesktopEntries) and act
 SmartPicker.qml         Smart UI: one list + live workspace preview
 WorkspaceManager.qml    workspace/window data used by Exposé
 ExposeManager.qml / Expose.qml   Exposé overview
+ClipboardPicker.qml     clipboard picker (Super+V = quickshell:clipboard): cliphist + preview;
+                        paste and Emacs popup via scripts/dettatura-emacs.sh
 SPEC-smart.md           what the Smart picker does
 ```
 

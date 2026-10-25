@@ -64,7 +64,7 @@ menu = {
         { "Terminale",            terminal,                                           S .. "Return" },
         { "Browser",              "chromium",                                         S .. "SHIFT + F" },
         { "Emacs",                "emacs",                                            S .. "SHIFT + E" },
-        { "Appunti (cronologia)", "cliphist list | tofi --include ~/.local/state/theme/tofi | cliphist decode | wl-copy", S .. "V" },
+        { "Appunti (cronologia)", qs("clipboard"),                                  S .. "V" },
         { "Registra chiamata",    "~/.local/bin/meet-rec toggle",                     S .. "SHIFT + R" },
         -- Invio scrive la password, Alt+1 utente+Tab+password, Alt+T copia il TOTP.
         -- Vault bloccato prima (chiede sempre la master password) e dopo: sbloccato solo durante la scelta
