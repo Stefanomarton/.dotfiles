@@ -18,6 +18,10 @@ bindkey '^I' expand-or-complete-prefix
 bindkey "^[[H" beginning-of-line
 bindkey "^[[F" end-of-line
 
+# Ctrl+freccia: parola per parola
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
+
 # #############
 # #  Aliases  #
 # #############
