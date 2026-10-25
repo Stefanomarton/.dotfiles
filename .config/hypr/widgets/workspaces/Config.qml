@@ -13,7 +13,7 @@ QtObject {
 
     // Windows on these workspaces are excluded from window picker
     // Use strings: "1", "2", "special:scratch", etc. A trailing "*" matches a prefix.
-    readonly property var windowPickerExcludedWorkspaces: ["special:scratch_editor", "special:scratch_qalc", "special:scratch_yazi*", "w11"]
+    readonly property var windowPickerExcludedWorkspaces: ["special*", "w11"]
 
     function isWindowWorkspaceExcluded(ws) {
         return windowPickerExcludedWorkspaces.some(function(ex) {
