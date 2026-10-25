@@ -63,13 +63,12 @@ ShellRoot {
                     var m = Hyprland.monitors.values[i]
                     if (m.name === modelData.name) {
                         var ws = m.activeWorkspace
-                        if (!ws) return "?"
-                        var name = ws.name || String(ws.id)
+                        var name = ws ? (ws.name || String(ws.id)) : ""
+                        // never a scratchpad (special:…): the monitor's regular workspace instead
+                        if (name === "" || name.startsWith("special:")) name = regularWsName
+                        if (!name) return "?"
                         if (name.match(/^\d+:/)) {
                             name = name.substring(name.indexOf(":") + 1)
-                        }
-                        if (name.startsWith("special:")) {
-                            name = name.substring(8)
                         }
                         return name
                     }
