@@ -14,10 +14,8 @@ QtObject {
     readonly property int iconSize: 64
     readonly property int bodyLines: 4
 
-    // ms on screen when the app doesn't ask for its own timeout; 0 = until closed
-    readonly property int timeoutLow: 3000
-    readonly property int timeoutNormal: 8000
-    readonly property int timeoutCritical: 0
+    // ms on screen for every popup, critical and "no timeout" ones too (they stay in history)
+    readonly property int timeout: 2000
     readonly property int idleSeconds: 120   // away from the PC: popups don't expire
     readonly property int historyLength: 100
 
@@ -27,7 +25,7 @@ QtObject {
     readonly property int dndMargin: Theme.pad
     readonly property int dndSize: 34                // moon diameter (px)
 
-    // Rules (were dunst's): "hide" = history only, "critical" = stays until closed, "" = as sent.
+    // Rules (were dunst's): "hide" = history only, "critical" = red border, shown in DND, "" = as sent.
     function rule(n) {
         // Claude Code waiting for an answer
         if (n.appName === "kitty" && n.body.indexOf("needs your input") >= 0) return "critical"

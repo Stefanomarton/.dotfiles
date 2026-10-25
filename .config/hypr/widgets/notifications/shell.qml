@@ -36,17 +36,9 @@ ShellRoot {
         return Quickshell.screens[0]
     }
 
-    function timeoutFor(e) {
-        if (e.urgency === NotificationUrgency.Critical) return Config.timeoutCritical
-        var t = e.n ? e.n.expireTimeout : -1
-        if (t > 0) return t * 1000
-        if (t === 0) return 0
-        return e.urgency === NotificationUrgency.Low ? Config.timeoutLow : Config.timeoutNormal
-    }
     function show(e) {
-        var t = timeoutFor(e)
         e.shown = true
-        e.expiresAt = t > 0 ? Date.now() + t : 0
+        e.expiresAt = Date.now() + Config.timeout
         // newest on top
         entries = [e].concat(entries.filter(function(x) { return x !== e }))
     }
