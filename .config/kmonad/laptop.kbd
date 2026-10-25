@@ -27,6 +27,8 @@
   s (tap-hold-next-release 100 s lctl)
   k (tap-hold-next-release 100 k rctl)
   l (tap-hold-next-release 100 l lalt)
+  v (tap-hold-next-release 150 v lmet)
+  m (tap-hold-next-release 150 m rmet)
 
   ;; Some shortname
   plus S-=
@@ -51,7 +53,7 @@
           grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
           @stab  @sq    w    e    r    t    y    u    i    o    p    [    ]    \
           @esc  @a   @s   d    f    g    h    j    @k    @l    /     ;  @ret
-          lsft z    x    c    v    b     n   m    ,    .   '    rsft
+          lsft z    x    c    @v   b     n   @m   ,    .   '    rsft
           lctrl lmet lalt       @num            @ralts rmet  cmp    rctl
           )
 
