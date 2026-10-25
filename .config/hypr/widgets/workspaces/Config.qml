@@ -56,7 +56,7 @@ QtObject {
 
     // Picker UI
     readonly property int pickerWidth: Math.round(750 * Theme.textScale)   // grows with the text (Theme.textScale)
-    readonly property int pickerFontSize: 20
+    readonly property int pickerFontSize: Theme.fontSize
     readonly property int pickerItemHeight: Math.round(60 * Theme.textScale)   // grows with the text (Theme.textScale)
     readonly property int pickerBorderRadius: Theme.radius
     readonly property int pickerInputHeight: Math.round(44 * Theme.textScale)   // grows with the text (Theme.textScale)

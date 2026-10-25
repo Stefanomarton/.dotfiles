@@ -13,18 +13,19 @@
 
 -- Apply a layout to the current workspace. Numbered workspaces are matched by
 -- number ("2"); named ones (negative id) need the "name:" selector.
-local function set_workspace_layout(layout_name, label, color)
+local function set_workspace_layout(layout_name, label)
     local ws = hl.get_active_workspace()
     local selector = ws.name
     if not tostring(ws.name):match("^%d+$") then
         selector = "name:" .. ws.name
     end
     hl.workspace_rule({ workspace = selector, layout = layout_name })
-    -- On-switch HUD via Hyprland's built-in notifications: <icon:-1=none> <ms> <color> <message>
-    hl.dispatch(hl.dsp.exec_cmd("hyprctl notify -1 1200 '" .. color .. "' 'fontsize:21  " .. label .. "'"))
+    -- On-switch HUD via Hyprland's built-in notifications: <icon:-1=none> <ms> <color> <message>,
+    -- in the accent of the desktop theme (appearance.lua)
+    hl.dispatch(hl.dsp.exec_cmd("hyprctl notify -1 1200 '" .. (theme_accent or "rgb(7a9bf5)") .. "' 'fontsize:21  " .. label .. "'"))
 end
-local function layout(name, label, color)
-    return function() set_workspace_layout(name, label, color) end
+local function layout(name, label)
+    return function() set_workspace_layout(name, label) end
 end
 
 -- qs(): a menu entry that triggers a Quickshell shortcut. The entries run inside function
@@ -63,7 +64,7 @@ menu = {
         { "Terminale",            terminal,                                           S .. "Return" },
         { "Browser",              "chromium",                                         S .. "SHIFT + F" },
         { "Emacs",                "emacs",                                            S .. "SHIFT + E" },
-        { "Appunti (cronologia)", "cliphist list | tofi | cliphist decode | wl-copy", S .. "V" },
+        { "Appunti (cronologia)", "cliphist list | tofi --include ~/.local/state/theme/tofi | cliphist decode | wl-copy", S .. "V" },
         { "Registra chiamata",    "~/.local/bin/meet-rec toggle",                     S .. "SHIFT + R" },
         -- Invio scrive la password, Alt+1 utente+Tab+password, Alt+T copia il TOTP.
         -- Vault bloccato prima (chiede sempre la master password) e dopo: sbloccato solo durante la scelta
@@ -88,11 +89,17 @@ menu = {
         { "Schermo intero",        hl.dsp.window.fullscreen(), S .. "F" },
         { "Chiudi finestra",       hl.dsp.window.close(),      S .. "Q" },
         { "Scambia i due monitor", "~/.config/hypr/scripts/swap_monitor_windows.sh", S .. "T" },
+        -- ~/.local/bin/theme: widget, bordi, rofi, tofi, kitty e GTK insieme
+        { "Tema", bind = S .. "SHIFT + T", group = {
+            { "c", "Chiaro", "~/.local/bin/theme chiaro" },
+            { "s", "Scuro",  "~/.local/bin/theme scuro" },
+            { "n", "Nero",   "~/.local/bin/theme nero" },
+        } },
         { "Layout del workspace", bind = S .. "SHIFT + L", group = {
-            { "m", "Master",    layout("lua:custom_center2", "Master",    "rgb(89b4fa)") },
-            { "f", "Monocle",   layout("monocle",            "Monocle",   "rgb(cba6f7)") },
-            { "s", "Scrolling", layout("scrolling",          "Scrolling", "rgb(a6e3a1)") },
-            { "d", "Dwindle",   layout("dwindle",            "Dwindle",   "rgb(fab387)") },
+            { "m", "Master",    layout("lua:custom_center2", "Master") },
+            { "f", "Monocle",   layout("monocle",            "Monocle") },
+            { "s", "Scrolling", layout("scrolling",          "Scrolling") },
+            { "d", "Dwindle",   layout("dwindle",            "Dwindle") },
         } },
     } },
     { "Notifiche", {
@@ -101,6 +108,14 @@ menu = {
         { "Azione della prima", qs("notif-action"),    S .. "CTRL + N" },
         { "Cronologia",         qs("notif-history"),   S .. "ALT + N" },
         { "Non disturbare",     qs("notif-dnd"),       S .. "D" },
+    } },
+    { "Pomodoro", {
+        { "Pomodoro", bind = S .. "O", group = {
+            { "s", "Avvia",            qs("pomodoro-start") },
+            { "p", "Pausa / riprendi", qs("pomodoro-pause") },
+            { "n", "Salta la fase",    qs("pomodoro-skip") },
+            { "x", "Ferma",            qs("pomodoro-stop") },
+        } },
     } },
     { "Screenshot", {
         { "Area negli appunti", [[grim -g "$(slurp -d -c 00000000 -b 00000080)" - | wl-copy]], S .. "SHIFT + S" },

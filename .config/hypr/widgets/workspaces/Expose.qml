@@ -25,7 +25,7 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
     // Darker than the pickers' scrim: behind a grid of thumbnails the windows compete with them
-    color: Qt.rgba(0, 0, 0, 0.92)
+    color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, 0.92)
 
     // Height each monitor section may use for its row of thumbnails
     readonly property real sectionMapH: (height - 260) / Math.max(1, ExposeManager.monitors.length) - 140
@@ -76,7 +76,7 @@ PanelWindow {
                         id: monLabel
                         text: (Quickshell.screens.find(function(s) { return s.name === monSection.mon.name }) || {}).model || monSection.mon.name
                         color: Theme.pickerSecondaryText
-                        font.pixelSize: Math.round(18 * Theme.textScale)
+                        font.pixelSize: Math.round(Theme.fontSize * Theme.textScale)
                         font.family: Theme.fontFamily
                         font.bold: true
                         font.letterSpacing: 2
@@ -115,7 +115,7 @@ PanelWindow {
                                         Text {
                                             text: cell.wsName
                                             color: cell.isActive ? Theme.accent : Theme.pickerText
-                                            font.pixelSize: Math.round(22 * Theme.textScale)
+                                            font.pixelSize: Math.round(Theme.fontLarge * Theme.textScale)
                                             font.family: Theme.fontFamily
                                             font.bold: true
                                             elide: Text.ElideRight
@@ -126,7 +126,7 @@ PanelWindow {
                                             anchors.bottom: parent.bottom
                                             text: cell.wins.length + (cell.wins.length === 1 ? " window" : " windows")
                                             color: Theme.pickerSecondaryText
-                                            font.pixelSize: Math.round(15 * Theme.textScale)
+                                            font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                                             font.family: Theme.fontFamily
                                         }
                                     }
@@ -210,7 +210,7 @@ PanelWindow {
                                                     anchors.bottom: parent.bottom
                                                     height: titleText.implicitHeight + 8
                                                     visible: tile.height > height * 2
-                                                    color: Qt.rgba(0, 0, 0, 0.75)
+                                                    color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, 0.75)
                                                     Text {
                                                         id: titleText
                                                         anchors.verticalCenter: parent.verticalCenter
@@ -218,7 +218,7 @@ PanelWindow {
                                                         width: parent.width - 16
                                                         text: tile.modelData.title || tile.modelData.class
                                                         color: Theme.pickerText
-                                                        font.pixelSize: Math.round(14 * Theme.textScale)
+                                                        font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                                                         font.family: Theme.fontFamily
                                                         elide: Text.ElideRight
                                                     }
@@ -293,7 +293,7 @@ PanelWindow {
                                     anchors.centerIn: parent
                                     text: chip.modelData.name
                                     color: chip.isActive ? Theme.accent : Theme.pickerSecondaryText
-                                    font.pixelSize: Math.round(18 * Theme.textScale)
+                                    font.pixelSize: Math.round(Theme.fontSize * Theme.textScale)
                                     font.family: Theme.fontFamily
                                     font.bold: true
                                 }
@@ -317,7 +317,7 @@ PanelWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Drag a window to move it · Click a window to focus · Click a workspace to switch · Esc to close"
                 color: Theme.pickerSecondaryText
-                font.pixelSize: Math.round(15 * Theme.textScale)
+                font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                 font.family: Theme.fontFamily
             }
         }

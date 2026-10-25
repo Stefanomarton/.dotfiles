@@ -266,10 +266,8 @@ ShellRoot {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 20
-                anchors.leftMargin: 28
-                anchors.rightMargin: 28
-                spacing: 16
+                anchors.margins: Theme.pad
+                spacing: Theme.gap
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -304,7 +302,7 @@ ShellRoot {
                             Layout.fillWidth: true
                             Layout.preferredWidth: 1   // equal columns
                             Layout.alignment: Qt.AlignTop
-                            spacing: 6
+                            spacing: 8
 
                             Text {
                                 // section heading: small, spaced capitals, quiet

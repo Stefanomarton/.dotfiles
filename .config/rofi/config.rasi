@@ -1,21 +1,16 @@
 /* rofi: per ora solo rofi-rbw (Super+P, Bitwarden). fuzzel 1.14 non ha più --override,
    che rofi-rbw usa per le scorciatoie Alt+…: con rofi funzionano tutte.
-   Tema come i widget (hypr/widgets/shared/Theme.qml): nero, testo quasi bianco, angoli vivi,
-   cornice ciano 2 px perché prende la tastiera, corrispondenze in verde. */
+   Colori, font, cornice e angoli dal tema del desktop (~/.local/bin/theme), come i widget:
+   cornice dell'accento attenuato perché prende la tastiera, corrispondenze nell'accento. */
 @theme "/dev/null"   /* senza il tema predefinito, che colora le righe alterne di crema */
 
 configuration {
-    font: "GeistMono Nerd Font 13";
-    show-icons: false;
+    show-icons: false;   /* il font (e la dimensione, più grande sul G9) arriva dal tema */
 }
 
+@import "~/.local/state/theme/rofi.rasi"   /* font, bg raised fg dim accent selected frame, bordo e angoli */
+
 * {
-    bg:      #000000;
-    raised:  #18181b;
-    fg:      #f4f4f5;
-    dim:     #a0a0a6;
-    accent:  #33ccff;
-    accent2: #00ff99;
     background-color: transparent;
     text-color: @fg;
 }
@@ -23,9 +18,7 @@ configuration {
 window {
     width: 50%;
     background-color: @bg;
-    border: 2px;
-    border-color: @accent;
-    border-radius: 0;
+    border-color: @frame;
     padding: 12px;
 }
 mainbox  { spacing: 10px; children: [ inputbar, message, listview ]; }
@@ -35,5 +28,5 @@ entry    { placeholder: "cerca"; placeholder-color: @dim; }
 textbox  { text-color: @dim; }
 listview { lines: 12; scrollbar: false; spacing: 2px; }
 element  { padding: 2px 6px; }
-element selected.normal { background-color: @raised; text-color: @accent; }
-element-text { text-color: inherit; highlight: bold #00ff99; }
+element selected.normal { background-color: @selected; text-color: @accent; }
+element-text { text-color: inherit; }   /* highlight (colore delle corrispondenze) nel file del tema: non accetta @variabili */

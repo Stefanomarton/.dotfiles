@@ -9,8 +9,8 @@ QtObject {
 
     readonly property int width: 1500        // menu card; entries flow in columns
     readonly property int columns: 3        // sections side by side
-    readonly property int bottomMargin: 80   // which-key style: near the bottom edge
-    readonly property int fontSize: 18
+    readonly property int bottomMargin: Theme.edge * 2   // which-key style: near the bottom edge
+    readonly property int fontSize: Theme.fontSize
     readonly property int keyWidth: 130      // key column ("Ctrl+Shift+S" fits)
 
     // Hold Super this long (ms) and the menu opens; quicker Super+key combos never see it

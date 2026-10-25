@@ -259,10 +259,8 @@ ShellRoot {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: 16
-            anchors.leftMargin: 20
-            anchors.rightMargin: 20
-            spacing: 16
+            anchors.margins: Theme.pad
+            spacing: Theme.gap
 
             Image {
                 visible: card.iconSource !== "" && status !== Image.Error
@@ -325,7 +323,7 @@ ShellRoot {
                 Flow {
                     visible: card.extraActions.length > 0
                     Layout.fillWidth: true
-                    Layout.topMargin: 6
+                    Layout.topMargin: 8
                     spacing: 8
                     Repeater {
                         model: card.extraActions
@@ -459,7 +457,7 @@ ShellRoot {
                 id: header
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.margins: 20
+                anchors.margins: Theme.pad
                 text: root.entries.length > 0 ? "Notifiche · " + root.entries.length : "Nessuna notifica"
                 color: Theme.pickerSecondaryText
                 font.pixelSize: Math.round((Config.fontSize - 2) * Theme.textScale)
@@ -473,7 +471,6 @@ ShellRoot {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 anchors.margins: 12
-                anchors.topMargin: 10
                 clip: true
                 model: root.entries
                 focus: true

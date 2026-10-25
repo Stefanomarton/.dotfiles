@@ -76,9 +76,9 @@ ShellRoot {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 30
-                anchors.rightMargin: 30
-                spacing: 22
+                anchors.leftMargin: Theme.pad
+                anchors.rightMargin: Theme.pad
+                spacing: Theme.pad
 
                 // Hand-drawn speaker (theme-independent); waves reflect the level.
                 Canvas {
@@ -134,7 +134,7 @@ ShellRoot {
                         height: parent.height
                         width: parent.width * Math.max(0, Math.min(1, root.volume))
                         radius: parent.radius
-                        // cyan → green, same as the Hyprland active border
+                        // accent → accent2 of the theme
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
                             GradientStop { position: 0.0; color: root.isMuted ? Theme.warning : Theme.accent }
@@ -149,7 +149,7 @@ ShellRoot {
                     horizontalAlignment: Text.AlignRight
                     text: root.isMuted ? "muted" : (Math.round(root.volume * 100) + "%")
                     color: root.isMuted ? Theme.warning : Theme.pickerText
-                    font.pixelSize: Math.round((root.isMuted ? 19 : 24) * Theme.textScale)
+                    font.pixelSize: Math.round((root.isMuted ? Theme.fontSize : Theme.fontLarge) * Theme.textScale)
                     font.family: Theme.fontFamily
                     font.bold: true
                 }

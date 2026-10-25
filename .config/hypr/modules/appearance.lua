@@ -8,12 +8,7 @@ hl.config({
         gaps_in  = 5,
         gaps_out = 20,
 
-        border_size = 2,
-        col = {
-            -- cyan → green, the same accents as the widgets (widgets/shared/Theme.qml)
-            active_border   = { colors = { "rgba(33ccffee)", "rgba(00ff99ee)" }, angle = 45 },
-            inactive_border = "rgba(595959aa)",
-        },
+        border_size = 2,   -- colours: apply_theme() below
 
         resize_on_border = false,
         allow_tearing    = false,
@@ -22,17 +17,15 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 0,
-        rounding_power = 1,
+        rounding_power = 1,   -- rounding: apply_theme() below
 
         active_opacity   = 1.0,
         inactive_opacity = 1.0,
 
-        shadow = {
+        shadow = {   -- colour: apply_theme() below
             enabled      = true,
             range        = 4,
             render_power = 3,
-            color        = 0xee1a1a1a,
         },
 
         blur = {
@@ -60,6 +53,24 @@ hl.config({
         force_zero_scaling = true,  -- X11 apps sharp on fractional-scale monitors instead of blurry
     },
 })
+
+-- Border colours, rounding and shadow from the desktop theme, the same as the widgets.
+-- ~/.local/bin/theme writes the file and calls this (hyprctl dispatch), no reload needed.
+-- Without the file (first login, before `theme` runs): the "nero" theme.
+function apply_theme()
+    local ok, t = pcall(dofile, os.getenv("HOME") .. "/.local/state/theme/hypr.lua")
+    if not ok then
+        t = { active = "rgba(7a9bf5ee)", active2 = "rgba(7a9bf5ee)", inactive = "rgba(2c2c31aa)",
+              shadow = "rgba(00000000)", accent = "rgb(7a9bf5)", radius = 4 }
+    end
+    theme_accent = t.accent   -- the layout HUD in menu.lua
+    hl.config({
+        general    = { col = { active_border = { colors = { t.active, t.active2 }, angle = 45 },
+                               inactive_border = t.inactive } },
+        decoration = { rounding = t.radius, shadow = { color = t.shadow } },
+    })
+end
+apply_theme()
 
 -- No pop or slide on windows: just a gentle fade in/out.
 hl.animation({ leaf = "windows",    enabled = false })

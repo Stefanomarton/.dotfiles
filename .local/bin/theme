@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""theme [chiaro|scuro|nero]: one palette for the whole desktop, switched live.
+
+Writes ~/.local/state/theme/ and tells each program:
+  theme.json     Quickshell widgets (hypr/widgets/shared/Theme.qml watches it, no restart)
+  hypr.lua       window borders, rounding, shadow (apply_theme() in hypr/modules/appearance.lua)
+  wallpaper      link to this theme's wallpaper (hyprpaper.conf points at it; switched over IPC)
+  rofi.rasi      rofi (@import in rofi/config.rasi), at the next launch
+  tofi           tofi (--include in hypr/modules/menu.lua), at the next launch
+  kitty.conf     kitty (include in kitty.conf), reloaded with SIGUSR1
+  qt-colors.conf Qt palette, used by qt5ct/qt6ct.conf (written here too), new windows
+  desk-theme.el  Emacs (base16 theme `desk`, lisp/appearance.el watches this folder), live
+  GTK: light/dark, theme and font via dconf (live; Chromium and Electron follow it through the
+       portal), colours in gtk-{3,4}.0/gtk.css (new windows)
+The Qt and GTK files are written only once home-manager stops owning them (theme.nix).
+No argument = apply the last theme again (autostart.lua does it at login).
+`theme check` renders every theme and checks contrast and output.
+
+Chiaro/Scuro/Nero are the Tesla tokens of lettore-dwd (work/projects/lettore-dwd/app/app.css).
+"""
+import json, os, struct, subprocess, sys, tempfile, zlib
+
+STATE = os.path.expanduser("~/.local/state/theme")
+RADIUS = 4                      # controls and cards, as in the Tesla CSS
+FONT = "JuliaMono"   # one face everywhere: widgets, rofi, tofi, kitty, Emacs, GTK, Qt
+SPACE = os.path.expanduser("~/.local/share/wallpapers/space.jpg")
+
+# terminal colours 0-15: Tesla has none, these use its status colours
+TERM_DARK = ["#000000", "#e5675e", "#4cc38a", "#e6b071", "#6b8ff0", "#b08ce8", "#5cc8e0", "#c4c6c9",
+             "#5c5e62", "#f0857d", "#6fd8a3", "#f0c48d", "#8aa6f3", "#c5a8f0", "#82d8ea", "#f2f2f2"]
+# light: "white" (7, 15) stays readable on white, programs that print in white don't vanish
+TERM_LIGHT = ["#171a20", "#c62828", "#2e7d4f", "#8a5d00", "#3e6ae1", "#7b4fc4", "#1f7a96", "#6f7175",
+              "#5c5e62", "#d84a4a", "#3a9a63", "#a06b00", "#3457b1", "#8a5cc7", "#2a8fae", "#8e8e8e"]
+
+# bg = widget/popup surface, surface/surface2 = inputs, hover, chips, rule/ruleHi = 1px lines,
+# ink/ink2/ink3 = text, accent2 = hover and second highlight, soft = selected row,
+# desk = solid wallpaper (None: the space photo),
+# dim = scrim behind the pickers, opacity = kitty background
+THEMES = {
+    "chiaro": dict(light=True, bg="#ffffff", surface="#f4f4f4", surface2="#eeeeee", rule="#e6e7e8",
+                   ruleHi="#d0d1d3", ink="#171a20", ink2="#393c41", ink3="#6a6c70", accent="#3e6ae1",
+                   accent2="#3457b1", soft="#ecf0fc", accentText="#ffffff", ok="#2e7d4f", warn="#8a5d00",
+                   danger="#c62828", desk="#e9eaec", dim=0.25, opacity=1.0, shadow="171a2022",
+                   term=TERM_LIGHT),
+    "scuro":  dict(light=False, bg="#171a20", surface="#23262d", surface2="#2c3038", rule="#2b2e35",
+                   ruleHi="#3a3e47", ink="#f2f2f2", ink2="#c4c6c9", ink3="#a3a6ab", accent="#6b8ff0",
+                   accent2="#8aa6f3", soft="#1f2a46", accentText="#0d1220", ok="#4cc38a", warn="#e6b071",
+                   danger="#e5675e", desk=None, dim=0.45, opacity=0.95, shadow="00000088",
+                   term=TERM_DARK),
+    "nero":   dict(light=False, bg="#000000", surface="#0d0d0d", surface2="#161616", rule="#1f1f1f",
+                   ruleHi="#2c2c31", ink="#f2f2f2", ink2="#d6d8db", ink3="#a3a6ab", accent="#7a9bf5",
+                   accent2="#97b1f7", soft="#121a2e", accentText="#0a0f1c", ok="#4cc38a", warn="#e6b071",
+                   danger="#e5675e", desk="#000000", dim=0.45, opacity=1.0, shadow="00000000",
+                   term=TERM_DARK),
+}
+
+
+def rgb(h):
+    return [int(h[i:i + 2], 16) for i in (1, 3, 5)]
+
+
+def mix(a, b, w):
+    """a blended toward b by w (0 = a, 1 = b)."""
+    return "#" + "".join(f"{round(x + (y - x) * w):02x}" for x, y in zip(rgb(a), rgb(b)))
+
+
+def contrast(a, b):
+    def lum(h):
+        c = [v / 255 for v in rgb(h)]
+        c = [v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    hi, lo = sorted((lum(a), lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def scale():
+    """1.3 with the G9 connected, like Theme.qml's textScale."""
+    try:
+        out = subprocess.run(["hyprctl", "monitors", "-j"], capture_output=True, text=True).stdout
+        return 1.3 if any(m.get("model") == "Odyssey G91F" for m in json.loads(out)) else 1.0
+    except (OSError, ValueError):
+        return 1.0
+
+
+def png(color):
+    """A 16x16 solid PNG (hyprpaper scales it to the monitor)."""
+    row = b"\0" + bytes(rgb(color)) * 16
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 16, 16, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(row * 16)) + chunk(b"IEND", b""))
+
+
+def qt_palette(t):
+    # QPalette roles in qt5ct order: WindowText Button Light Midlight Dark Mid Text BrightText
+    # ButtonText Base Window Shadow Highlight HighlightedText Link LinkVisited AlternateBase
+    # NoRole ToolTipBase ToolTipText PlaceholderText. Tooltips inverted, like the Tesla toast.
+    light = "#ffffff" if t["light"] else t["surface2"]
+    def roles(text, sub):
+        return ", ".join([text, t["surface"], light, t["surface2"], t["ruleHi"], t["rule"], text, "#ffffff",
+                          text, t["bg"], t["bg"], "#000000", t["accent"], t["accentText"], t["accent"],
+                          t["accent2"], t["surface"], t["bg"], t["ink"], t["bg"], sub])
+    active = roles(t["ink"], t["ink3"])
+    return (f"[ColorScheme]\nactive_colors={active}\ninactive_colors={active}\n"
+            f"disabled_colors={roles(t['ink3'], t['ink3'])}\n")
+
+
+def emacs_theme(t):
+    # base16 roles: 00-07 background to text, 08-0F syntax (red variables, orange constants,
+    # yellow types, green strings, cyan, blue functions, purple keywords, brown deprecated)
+    term = t["term"]
+    base = [t["bg"], t["surface"], t["soft"], t["ink3"], t["ink2"], t["ink"], t["ink"], t["ink"],
+            term[1], t["warn"], term[11], term[2], term[6], t["accent"], term[5], mix(t["danger"], t["bg"], 0.3)]
+    colors = " ".join(f':base{i:02X} "{v}"' for i, v in enumerate(base))
+    return (";;; desk-theme.el --- written by ~/.local/bin/theme  -*- lexical-binding: t; -*-\n(require 'base16-theme)\n(deftheme desk)\n"
+            f"(base16-theme-define 'desk '({colors}))\n(provide-theme 'desk)\n")
+
+
+def render(t, s=1.0):
+    """{file name: content} for one theme, s = text scale."""
+    frame = mix(t["accent"], t["bg"], 0.5)
+    pt = round(13.5 * s)   # = Theme.fontSize (18 px) in points, for rofi and tofi
+    qml = {k: t[k] for k in ("bg", "surface", "rule", "ink", "ink2", "ink3", "accent", "accent2", "soft",
+                             "accentText", "ok", "warn", "danger", "dim")}
+    files = {
+        "theme.json": json.dumps(qml | {"frame": frame, "radius": RADIUS, "border": 1}, indent=1),
+        "hypr.lua": f'return {{ active = "rgba({t["accent"][1:]}ee)", active2 = "rgba({t["accent"][1:]}ee)", '
+                    f'inactive = "rgba({t["ruleHi"][1:]}aa)", shadow = "rgba({t["shadow"]})", '
+                    f'accent = "rgb({t["accent"][1:]})", radius = {RADIUS} }}\n',
+        "rofi.rasi": f'configuration {{ font: "{FONT} {pt}"; }}\n'
+                     "* { " + " ".join(f"{k}: {t[v]};" for k, v in
+                     [("bg", "bg"), ("raised", "surface"), ("fg", "ink"), ("dim", "ink3"),
+                      ("accent", "accent"), ("selected", "soft")]) + f" frame: {frame}; }}\n"
+                     f"window {{ border: 1px; border-radius: {RADIUS}px; }}\n"
+                     f"element-text {{ highlight: bold {t['accent']}; }}\n",
+        "tofi": f"font = {FONT}\nfont-size = {pt}\nbackground-color = {t['bg']}\ntext-color = {t['ink']}\n"
+                f"selection-color = {t['accent']}\nselection-background = {t['soft']}\n"
+                f"selection-background-padding = 4, 8\noutline-color = {frame}\noutline-width = 1\n"
+                f"border-width = 0\ncorner-radius = {RADIUS}\n",
+        "kitty.conf": "\n".join([
+            f"background {t['bg']}", f"foreground {t['ink']}", f"cursor {t['ink']}",
+            f"selection_background {t['soft']}", f"selection_foreground {t['ink']}",
+            f"url_color {t['accent']}", f"active_border_color {t['accent']}",
+            f"inactive_border_color {t['rule']}", f"tab_bar_background {t['surface']}",
+            f"active_tab_background {t['bg']}", f"active_tab_foreground {t['ink']}",
+            f"inactive_tab_background {t['surface']}", f"inactive_tab_foreground {t['ink3']}",
+            f"background_opacity {t['opacity']}",
+        ] + [f"color{i} {c}" for i, c in enumerate(t["term"])]) + "\n",
+        "qt-colors.conf": qt_palette(t),
+        "desk-theme.el": emacs_theme(t),
+        # qt5ct.conf and qt6ct.conf: same format
+        "qtct.conf": f"[Appearance]\ncolor_scheme_path={STATE}/qt-colors.conf\ncustom_palette=true\n"
+                     f"style=Fusion\nstandard_dialogs=default\n\n[Fonts]\n"
+                     f'fixed="{FONT},11"\ngeneral="{FONT},11"\n',
+        # libadwaita named colours; adw-gtk3 reads the same names on GTK 3
+        "gtk.css": "".join(f"@define-color {k} {v};\n" for k, v in [
+            ("accent_color", t["accent"]), ("accent_bg_color", t["accent"]), ("accent_fg_color", t["accentText"]),
+            ("window_bg_color", t["bg"]), ("window_fg_color", t["ink"]), ("view_bg_color", t["bg"]),
+            ("view_fg_color", t["ink"]), ("headerbar_bg_color", t["bg"]), ("headerbar_fg_color", t["ink"]),
+            ("headerbar_border_color", t["rule"]), ("sidebar_bg_color", t["surface"]),
+            ("sidebar_fg_color", t["ink"]), ("card_bg_color", t["surface"]), ("card_fg_color", t["ink"]),
+            ("popover_bg_color", t["bg"]), ("popover_fg_color", t["ink"]),
+            ("dialog_bg_color", t["bg"]), ("dialog_fg_color", t["ink"])]),
+    }
+    return files
+
+
+def write(path, data):
+    # atomic: the widgets watching the file never read half of it
+    tmp = path + ".tmp"
+    with open(tmp, "wb" if isinstance(data, bytes) else "w") as f:
+        f.write(data)
+    os.replace(tmp, path)
+
+
+def run(*cmd):
+    try:   # a missing program (no Hyprland, no dconf) just skips that step
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        pass
+
+
+def owned(path):
+    """True while home-manager owns the file (a link into the store): leave it alone."""
+    return os.path.islink(path)
+
+
+def apply(name):
+    t = THEMES[name]
+    os.makedirs(STATE, exist_ok=True)
+    files = render(t, scale())
+    for fname, text in files.items():
+        write(os.path.join(STATE, fname), text)
+    write(os.path.join(STATE, "name"), name + "\n")
+
+    wall = SPACE
+    if t["desk"]:
+        wall = os.path.join(STATE, f"desk-{t['desk'][1:]}.png")
+        write(wall, png(t["desk"]))
+    link = os.path.join(STATE, "wallpaper")
+    if os.path.lexists(link + ".tmp"):
+        os.remove(link + ".tmp")
+    os.symlink(wall, link + ".tmp")
+    os.replace(link + ".tmp", link)
+    run("hyprctl", "hyprpaper", "wallpaper", f",{wall},cover")
+
+    run("hyprctl", "dispatch", "function() apply_theme() end")
+    run("pkill", "-USR1", "-x", ".kitty-wrapped")   # the process name of kitty on NixOS
+
+    scheme, gtk = ("prefer-light", "adw-gtk3") if t["light"] else ("prefer-dark", "adw-gtk3-dark")
+    for key, value in [("color-scheme", scheme), ("gtk-theme", gtk), ("font-name", f"{FONT} 11"),
+                       ("monospace-font-name", f"{FONT} 11")]:
+        run("dconf", "write", f"/org/gnome/desktop/interface/{key}", f"'{value}'")
+    for d in ("gtk-3.0", "gtk-4.0"):
+        p = os.path.expanduser(f"~/.config/{d}/gtk.css")
+        if not owned(p):
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            write(p, files["gtk.css"])
+    for d in ("qt5ct", "qt6ct"):
+        p = os.path.expanduser(f"~/.config/{d}/{d}.conf")
+        if not owned(p):
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            write(p, files["qtct.conf"])
+
+
+def check():
+    for name, t in THEMES.items():
+        bg = t["bg"]
+        need = [("ink", bg, 7), ("ink2", bg, 7), ("ink3", bg, 4.5), ("ink3", t["surface"], 4.5),
+                ("ink", t["soft"], 7), ("accent", bg, 4.5), ("accent", t["soft"], 3),
+                ("accentText", t["accent"], 4.5), ("ok", bg, 3), ("warn", bg, 3), ("danger", bg, 3)]
+        for key, against, ratio in need:
+            c = contrast(t[key], against)
+            assert c >= ratio, f"{name}: {key} on {against} = {c:.2f}, needs {ratio}"
+        assert len(t["term"]) == 16, name
+        files = render(t)
+        q = json.loads(files["theme.json"])
+        assert all(len(v) == 7 and v[0] == "#" for k, v in q.items() if isinstance(v, str)), name
+        assert files["hypr.lua"].count("rgba(") == 4, name
+        assert len(files["qt-colors.conf"].split("\n")[1].split(",")) == 21, name
+        assert files["desk-theme.el"].count('"#') == 16, name
+    assert png("#e9eaec")[:8] == b"\x89PNG\r\n\x1a\n"
+    with tempfile.TemporaryDirectory() as d:
+        for fname, text in render(THEMES["chiaro"]).items():
+            write(os.path.join(d, fname), text)
+        assert sorted(os.listdir(d)) == sorted(render(THEMES["nero"])), "stray .tmp files"
+    print("ok:", ", ".join(THEMES))
+
+
+if __name__ == "__main__":
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    if arg == "check":
+        check()
+    elif arg is None or arg in THEMES:
+        if arg is None:
+            try:
+                arg = open(os.path.join(STATE, "name")).read().strip()
+            except OSError:
+                arg = "nero"
+            arg = arg if arg in THEMES else "nero"
+        apply(arg)
+    else:
+        sys.exit(f"theme: {arg}? one of: {', '.join(THEMES)}")

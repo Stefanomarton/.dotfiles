@@ -1,51 +1,40 @@
 pragma Singleton
-
+import Quickshell
 import QtQuick
 
 QtObject {
+    // Main screen: the first of these that is connected (name or model), otherwise the first
+    // screen. G9 on the desktop and on a docked laptop, else the laptop panel; never the Xiaomi.
+    readonly property var monitors: ["Odyssey G91F", "eDP-1"]
+
     // Timer durations (in minutes)
     readonly property int focusMinutes: 45
     readonly property int shortBreakMinutes: 5
     readonly property int longBreakMinutes: 15
     readonly property int sessionsUntilLongBreak: 4
 
-    // Colors
-    readonly property color focusColor: "#FF0000"       // Red
-    readonly property color breakColor: "#5f8787"       // Green
-    readonly property color pauseColor: "#444444"       // Amber/Yellow
+    // Colors come from the shared Theme.qml (~/.local/bin/theme)
+    readonly property color focusColor: Theme.danger
+    readonly property color breakColor: Theme.ok
+    readonly property color pauseColor: Theme.warning
 
-    // Display
-    readonly property bool primaryMonitorOnly: true
+    // Screen frame
+    readonly property int borderWidth: 4
+    readonly property int cornerRadius: Theme.radius
 
-    // Border styling
-    readonly property int borderWidth: 10
-    readonly property int cornerRadius: 15
-
-    // Timer display
-    readonly property int timerFontSize: 22
-    readonly property string timerFontFamily: "JuliaMono"
+    // Timer in the notch at the top
+    readonly property int timerFontSize: Math.round(Theme.fontSize * Theme.textScale)
     readonly property int timerPaddingH: 28
-    readonly property int timerPaddingV: 14
-    readonly property int timerTopMargin: 12
-    readonly property real timerOpacity: 0.95
+    readonly property int timerPaddingV: 12
 
     // Song display
     readonly property bool songNotchEnabled: false
-    readonly property int songFontSize: 18
+    readonly property int songFontSize: Math.round(Theme.fontSmall * Theme.textScale)
     readonly property int songPaddingH: 44
-    readonly property int songPaddingV: 20
+    readonly property int songPaddingV: 16
     readonly property int songMaxWidth: 700
 
-    // Animations
     readonly property int colorTransitionMs: 200
-
-    // Fluid border animation
-    readonly property bool fluidBorderAnimation: true
-    readonly property int fluidAnimationDurationMs: 4000  // one full shimmer cycle
-    readonly property real fluidMinBrightness: 0.3        // 0.0 = full mix, 1.0 = no change
-    readonly property color focusMixColor: "#3d0000"
-    readonly property color breakMixColor: "#003d15"
-    readonly property color pauseMixColor: "#3d3300"
 
     // Notifications
     readonly property bool notificationsEnabled: false
@@ -54,7 +43,7 @@ QtObject {
     // Sounds (absolute file paths, empty = disabled)
     // Command used to play sounds, e.g. "paplay", "aplay", "mpv --no-video"
     readonly property string soundCommand: "mpv --no-video --audio-buffer=0"
-    readonly property string focusStartSound: "/home/sm/projects/pomodoro-widget/sounds/muniz.mp3"
+    readonly property string focusStartSound: Quickshell.shellDir + "/sounds/muniz.mp3"
     readonly property string pauseSound: ""
     readonly property string breakSound: ""
     readonly property string intervalSound: ""

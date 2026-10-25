@@ -38,21 +38,27 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
 
 | Cartella | Cosa | Note |
 |---|---|---|
-| `shared/Theme.qml` | colori, font, `textScale` | tutti i `Theme.qml` sono symlink a questo |
+| `shared/Theme.qml` | colori (da `theme.json`), font, `textScale` | tutti i `Theme.qml` sono symlink a questo |
 | `whichkey` | menu tenendo Super | |
 | `notifications` | server notifiche (al posto di dunst) | Super+N/Shift+N/Ctrl+N/Alt+N, Super+D non disturbare |
 | `recorder` | badge e popup di `~/.local/bin/meet-rec` | la registrazione è il servizio utente `meet-rec` |
 | `volume` | OSD del volume | |
 | `workspaces` | Smart picker (Super+S), exposé, `pickers-close` | ordinamento in `rank.js`: `node rank_test.js` |
 | `corner` | nome del workspace in ogni monitor | |
-| `pomodoro` | non avviato | tema suo, non toccato |
+| `pomodoro` | cornice dello schermo col timer | Super+O poi s/p/n/x; colori del tema: danger = lavoro, ok = pausa, warning = timer fermo |
 
 - Schermo dei popup: lista `monitors` in ogni Config.qml, primo collegato vince:
   `["Odyssey G91F", "eDP-1"]` = G9 (desktop o portatile in dock), altrimenti pannello; mai Xiaomi.
-- Tema: nero, testo quasi bianco, bordi grigi 2 px, accenti ciano → verde **uguali al bordo
-  della finestra attiva** (`modules/appearance.lua`: se cambi uno, cambia l'altro).
-  Cornice ciano solo sui pannelli che prendono la tastiera (menu, picker, cronologia).
-  Font unico Geist Mono (non ha ⌫: usare la parola). Testo ×1.3 se c'è il G9 (`textScale`).
+- Tema: **una sola fonte**, `~/.local/bin/theme` (chiaro / scuro / nero = token Tesla di lettore-dwd).
+  Super+Shift+T poi c/s/n. Scrive `~/.local/state/theme/`
+  (fuori dal repo) e lo applica al volo: widget (`Theme.qml` guarda `theme.json`), bordi e
+  rounding (`apply_theme()` in `modules/appearance.lua`, via `hyprctl dispatch`), kitty (SIGUSR1),
+  GTK (gsettings + `gtk.css`); rofi e tofi alla prossima apertura. All'avvio `autostart.lua`
+  rilancia `theme` senza argomenti (l'ultimo scelto). `theme check` controlla l'output.
+  Colori nuovi: aggiungerli in `THEMES` dello script, poi in `Theme.qml` (JsonAdapter + proprietà).
+  Nomi che iniziano con `on` + maiuscola (`onAccent`) in QML sono gestori di segnale: non usarli.
+  Cornice dell'accento solo sui pannelli che prendono la tastiera (menu, picker, cronologia).
+  Font unico JuliaMono (anche kitty, Emacs, GTK, Qt). Testo ×1.3 se c'è il G9 (`textScale`).
 
 ## Trappole (scoperte a caro prezzo)
 
@@ -91,5 +97,4 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
 
 ## Aperto
 
-- dunst tolto da `~/.nixos/modules/theme.nix`: serve `sudo nixos-rebuild switch` su ogni host.
 - `.zshrc` ed `emacs` hanno modifiche non committate di un'altra sessione.

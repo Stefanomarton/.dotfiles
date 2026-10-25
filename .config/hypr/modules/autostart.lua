@@ -12,12 +12,14 @@ hl.on("hyprland.start", function ()
          -- socket SSH) e scrive in RAM le chiavi API lette dai programmi. Parte qui perché
          -- erediti WAYLAND_DISPLAY per la richiesta della master password
          hl.exec_cmd([[~/.local/bin/secrets-sync --login || notify-send -u critical "Segreti" "secrets-sync non riuscito: rilanciarlo"]])
+         hl.exec_cmd("~/.local/bin/theme")   -- rimette l'ultimo tema (file in ~/.local/state/theme)
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/workspaces/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/corner/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/volume/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/recorder/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/notifications/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/whichkey/")
+         hl.exec_cmd("qs -p ~/.config/hypr/widgets/pomodoro/")
 
          -- feature homelab di NixOS
          if profile.personal then

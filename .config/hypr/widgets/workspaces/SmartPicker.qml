@@ -96,8 +96,8 @@ PanelWindow {
                     text: SmartPickerManager.moveMode
                           ? "Move \"" + (SmartPickerManager.openedTitle || "no focused window") + "\" to…"
                           : ({ w: "Workspaces", p: "Windows", a: "Applications", ">": "Run command" })[SmartPickerManager.parsed.letter] || "Smart"
-                    color: SmartPickerManager.moveMode ? Theme.base0A : Theme.pickerText
-                    font.pixelSize: Math.round(14 * Theme.textScale)
+                    color: SmartPickerManager.moveMode ? Theme.warning : Theme.pickerText
+                    font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                     font.family: Theme.fontFamily
                     font.bold: true
                     elide: Text.ElideRight
@@ -193,7 +193,7 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 text: chip.modelData[1]
                                 color: chip.active ? Theme.pickerText : Theme.pickerSecondaryText
-                                font.pixelSize: Math.round(13 * Theme.textScale)
+                                font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                                 font.family: Theme.fontFamily
                                 font.bold: chip.active
                             }
@@ -225,7 +225,7 @@ PanelWindow {
                         width: list.width
                         height: Config.pickerItemHeight
                         radius: Theme.radius
-                        color: picked ? Theme.base0B
+                        color: picked ? Theme.accent
                              : current ? Theme.pickerItemSelected
                              : mouse.containsMouse ? Theme.pickerItemHover : "transparent"
 
@@ -239,7 +239,7 @@ PanelWindow {
                                 Layout.preferredWidth: 4
                                 Layout.preferredHeight: 24
                                 radius: Theme.radius
-                                color: row.picked ? Theme.base00 : Theme.base08
+                                color: row.picked ? Theme.accentText : Theme.accent
                                 visible: row.current || row.picked
                             }
 
@@ -259,7 +259,7 @@ PanelWindow {
                                 Text {
                                     Layout.fillWidth: true
                                     text: row.modelData.title
-                                    color: row.picked ? Theme.base00 : Theme.pickerText
+                                    color: row.picked ? Theme.accentText : Theme.pickerText
                                     font.pixelSize: Math.round(Config.pickerFontSize * Theme.textScale)
                                     font.family: Theme.fontFamily
                                     font.bold: row.modelData.kind === "ws"
@@ -268,7 +268,7 @@ PanelWindow {
                                 Text {
                                     Layout.fillWidth: true
                                     text: row.modelData.subtitle
-                                    color: row.picked ? Theme.base01 : Theme.pickerSecondaryText
+                                    color: row.picked ? Theme.accentText : Theme.pickerSecondaryText
                                     font.pixelSize: Math.round((Config.pickerFontSize - 4) * Theme.textScale)
                                     font.family: Theme.fontFamily
                                     elide: Text.ElideRight
@@ -278,8 +278,8 @@ PanelWindow {
                             // Kind tag: ws · win · app · cmd · new
                             Text {
                                 text: row.modelData.kind
-                                color: row.picked ? Theme.base01 : Theme.pickerHintText
-                                font.pixelSize: Math.round(13 * Theme.textScale)
+                                color: row.picked ? Theme.accentText : Theme.pickerHintText
+                                font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                                 font.family: Theme.fontFamily
                             }
                         }
@@ -309,7 +309,7 @@ PanelWindow {
                     Layout.fillWidth: true
                     text: picker.hints
                     color: Theme.pickerSecondaryText
-                    font.pixelSize: Math.round(13 * Theme.textScale)
+                    font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                     font.family: Theme.fontFamily
                     elide: Text.ElideRight
                 }
@@ -366,7 +366,7 @@ PanelWindow {
                         Text {
                             text: previewPane.wsName
                             color: Theme.pickerText
-                            font.pixelSize: Math.round(15 * Theme.textScale)
+                            font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                             font.family: Theme.fontFamily
                             font.bold: true
                             elide: Text.ElideRight
@@ -377,7 +377,7 @@ PanelWindow {
                             visible: previewPane.hasPreview
                             text: previewPane.wins.length + (previewPane.wins.length === 1 ? " window" : " windows")
                             color: Theme.pickerSecondaryText
-                            font.pixelSize: Math.round(13 * Theme.textScale)
+                            font.pixelSize: Math.round(Theme.fontSmall * Theme.textScale)
                             font.family: Theme.fontFamily
                             anchors.verticalCenter: parent.verticalCenter
                         }

@@ -182,7 +182,7 @@ ShellRoot {
 
         readonly property bool defaultMic: root.mic.startsWith("predefinito")
         readonly property color tint: kind === "error" ? Theme.warning
-                                    : kind === "stop" ? Theme.accent2 : Config.recColor
+                                    : kind === "stop" ? Theme.ok : Config.recColor
 
         Rectangle {
             anchors.centerIn: parent
@@ -197,9 +197,9 @@ ShellRoot {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 30
-                anchors.rightMargin: 30
-                spacing: 22
+                anchors.leftMargin: Theme.pad
+                anchors.rightMargin: Theme.pad
+                spacing: Theme.pad
 
                 // ● recording, ■ saved, ! error
                 Rectangle {
@@ -222,7 +222,7 @@ ShellRoot {
                             : popup.kind === "stop" ? "Salvata · " + root.fmt(root.lastElapsed)
                             : "Registrazione interrotta"
                         color: Theme.pickerText
-                        font.pixelSize: Math.round((24) * Theme.textScale)
+                        font.pixelSize: Math.round(Theme.fontLarge * Theme.textScale)
                         font.family: Theme.fontFamily
                         font.bold: true
                     }
@@ -233,7 +233,7 @@ ShellRoot {
                             : popup.kind === "stop" ? root.file.replace(/^.*\//, "")
                             : "journalctl --user -u meet-rec"
                         color: popup.kind === "start" && popup.defaultMic ? Theme.warning : Theme.pickerSecondaryText
-                        font.pixelSize: Math.round((17) * Theme.textScale)
+                        font.pixelSize: Math.round(Theme.fontSize * Theme.textScale)
                         font.family: Theme.fontFamily
                     }
                 }

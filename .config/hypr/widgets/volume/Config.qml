@@ -14,5 +14,5 @@ QtObject {
     readonly property int osdOffsetX: 0
     readonly property int osdOffsetY: 0
 
-    // Colors come from the shared Theme.qml (Hyprland cyan→green accent).
+    // Colors come from the shared Theme.qml (~/.local/bin/theme).
 }

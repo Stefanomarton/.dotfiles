@@ -124,7 +124,8 @@ ShellRoot {
             readonly property int paddingH: Config.cornerPaddingH
             readonly property int paddingV: Config.cornerPaddingV
 
-            implicitWidth: Math.min(maxWidth, Math.max(minWidth, wsText.implicitWidth + paddingH * 2))
+            // ceil: the text width is fractional, a window rounded down by half a pixel elided "temi" to "te…"
+            implicitWidth: Math.min(maxWidth, Math.max(minWidth, Math.ceil(wsText.implicitWidth) + paddingH * 2))
             implicitHeight: Math.max(minHeight, wsText.implicitHeight + paddingV * 2)
 
             // Rettangolo del badge in coordinate globali logiche, per capire se
@@ -305,17 +306,17 @@ ShellRoot {
                 radius: Theme.radius
                 color: Theme.cornerBackground
                 border.width: Theme.borderWidth
-                border.color: whspr.alt === "active" ? Theme.accent2 : Theme.warning
+                border.color: whspr.alt === "active" ? Theme.ok : Theme.warning
 
                 Row {
                     id: micRow
                     anchors.centerIn: parent
-                    spacing: 14
+                    spacing: Theme.gap
 
                     Text {
                         id: micIcon
                         text: whspr.text
-                        color: whspr.alt === "active" ? Theme.accent2 : Theme.warning
+                        color: whspr.alt === "active" ? Theme.ok : Theme.warning
                         font.pixelSize: Math.round((32) * Theme.textScale)
                         font.family: "Symbols Nerd Font"
                         anchors.verticalCenter: parent.verticalCenter
@@ -335,7 +336,7 @@ ShellRoot {
                             : whspr.alt === "processing" ? "Trascrivo…"
                             : whspr.tooltip
                         color: Theme.cornerText
-                        font.pixelSize: Math.round((22) * Theme.textScale)
+                        font.pixelSize: Math.round(Theme.fontLarge * Theme.textScale)
                         font.bold: true
                         font.family: Theme.fontFamily
                         anchors.verticalCenter: parent.verticalCenter

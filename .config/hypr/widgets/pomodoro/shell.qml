@@ -9,6 +9,16 @@ ShellRoot {
 
     property string currentSong: ""
 
+    // the first of Config.monitors that is connected, otherwise the first screen
+    readonly property var mainScreen: {
+        for (var i = 0; i < Config.monitors.length; i++) {
+            var want = Config.monitors[i]
+            var s = Quickshell.screens.find(function(x) { return x.name === want || x.model === want })
+            if (s) return s
+        }
+        return Quickshell.screens[0]
+    }
+
     Process {
         id: playerctlProcess
         command: ["sh", "-c", "playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null || echo"]
@@ -76,7 +86,7 @@ ShellRoot {
             color: "transparent"
             mask: Region {}
 
-            visible: PomodoroState.running && (!Config.primaryMonitorOnly || modelData === Quickshell.screens[0])
+            visible: PomodoroState.running && modelData === root.mainScreen
 
             // Hidden text to measure timer width
             Text {
@@ -86,7 +96,7 @@ ShellRoot {
                 font {
                     pixelSize: Config.timerFontSize
                     bold: true
-                    family: Config.timerFontFamily
+                    family: Theme.fontFamily
                 }
             }
 
@@ -97,7 +107,7 @@ ShellRoot {
                 text: root.currentSong
                 font {
                     pixelSize: Config.songFontSize
-                    family: Config.timerFontFamily
+                    family: Theme.fontFamily
                 }
             }
 
@@ -120,22 +130,11 @@ ShellRoot {
                     : 0
                 property real songNotchR: songNotchH / 2
 
-                property real fluidPhase: 0
-
-                NumberAnimation on fluidPhase {
-                    running: Config.fluidBorderAnimation
-                    from: 0
-                    to: 1
-                    duration: Config.fluidAnimationDurationMs
-                    loops: Animation.Infinite
-                }
-
                 Behavior on borderColor {
                     ColorAnimation { duration: Config.colorTransitionMs }
                 }
 
                 onBorderColorChanged: requestPaint()
-                onFluidPhaseChanged: if (Config.fluidBorderAnimation) requestPaint()
                 onWidthChanged: requestPaint()
                 onHeightChanged: requestPaint()
                 onNotchWidthChanged: requestPaint()
@@ -157,23 +156,7 @@ ShellRoot {
                     var notchLeft = centerX - nw / 2
                     var notchRight = centerX + nw / 2
 
-                    if (Config.fluidBorderAnimation) {
-                        var fp = borderCanvas.fluidPhase
-                        // Smooth sine pulse: 0 → 1 → 0 per cycle
-                        var t = 0.5 - 0.5 * Math.cos(fp * 2 * Math.PI)
-                        var bc = borderColor
-                        var mc = PomodoroState.isPaused ? Config.pauseMixColor
-                               : PomodoroState.isBreak  ? Config.breakMixColor
-                               :                          Config.focusMixColor
-                        var blend = t * (1 - Config.fluidMinBrightness)
-                        ctx.fillStyle = Qt.rgba(
-                            bc.r + (mc.r - bc.r) * blend,
-                            bc.g + (mc.g - bc.g) * blend,
-                            bc.b + (mc.b - bc.b) * blend,
-                            bc.a)
-                    } else {
-                        ctx.fillStyle = borderColor
-                    }
+                    ctx.fillStyle = borderColor
 
                     // Top edge left of notch
                     ctx.fillRect(r, 0, notchLeft - nr - r, bw)
@@ -291,11 +274,11 @@ ShellRoot {
                     topMargin: Config.timerPaddingV / 2
                 }
                 text: PomodoroState.timeDisplay
-                color: "white"
+                color: Theme.accentText
                 font {
                     pixelSize: Config.timerFontSize
                     bold: true
-                    family: Config.timerFontFamily
+                    family: Theme.fontFamily
                 }
             }
 
@@ -309,13 +292,13 @@ ShellRoot {
                     bottomMargin: Config.songPaddingV / 2
                 }
                 text: root.currentSong
-                color: "white"
+                color: Theme.accentText
                 width: Config.songMaxWidth - Config.songPaddingH
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
                 font {
                     pixelSize: Config.songFontSize
-                    family: Config.timerFontFamily
+                    family: Theme.fontFamily
                 }
             }
 
@@ -333,11 +316,11 @@ ShellRoot {
                 Text {
                     id: overlayText
                     anchors.centerIn: parent
-                    color: "white"
+                    color: Theme.accentText
                     font {
                         pixelSize: Config.timerFontSize
                         bold: true
-                        family: Config.timerFontFamily
+                        family: Theme.fontFamily
                     }
                 }
 
