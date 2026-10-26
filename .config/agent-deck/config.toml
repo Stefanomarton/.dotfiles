@@ -2,7 +2,7 @@
 # All options: https://github.com/asheshgoplani/agent-deck/blob/main/skills/agent-deck/references/config-reference.md
 
 default_tool = "claude"
-theme = "dark"
+theme = "light"
 
 [claude]
   command = "claude-personal"

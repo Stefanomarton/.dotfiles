@@ -10,6 +10,8 @@ Writes ~/.local/state/theme/ and tells each program:
   kitty.conf     kitty (include in kitty.conf), reloaded with SIGUSR1
   qt-colors.conf Qt palette, used by qt5ct/qt6ct.conf (written here too), new windows
   desk-theme.el  Emacs (base16 theme `desk`, lisp/appearance.el watches this folder), live
+  agent-deck     theme = light|dark in its config.toml (the dotfiles file the link points at): new sessions,
+                 no restart; "system" can't do it (dark-mode-go asks DBus the wrong name, always dark)
   Tasks          the desktop app, if it runs (tasks --theme=…; it keeps the choice), live
   GTK: light/dark, theme and font via dconf (live; Chromium and Electron follow it through the
        portal), colours in gtk-{3,4}.0/gtk.css (new windows)
@@ -19,7 +21,7 @@ No argument = apply the last theme again (autostart.lua does it at login).
 
 Chiaro/Scuro/Nero are the Tesla tokens of lettore-dwd (work/projects/lettore-dwd/app/app.css).
 """
-import json, os, struct, subprocess, sys, tempfile, zlib
+import json, os, re, struct, subprocess, sys, tempfile, zlib
 
 STATE = os.path.expanduser("~/.local/state/theme")
 RADIUS = 4                      # controls and cards, as in the Tesla CSS
@@ -207,6 +209,16 @@ def apply(name):
 
     run("hyprctl", "dispatch", "function() apply_theme() end")
     run("pkill", "-USR1", "-x", ".kitty-wrapped")   # the process name of kitty on NixOS
+    # agent-deck: the top-level theme line, written in the file the link points at (the link stays)
+    ad = os.path.realpath(os.path.expanduser("~/.config/agent-deck/config.toml"))
+    if os.path.exists(ad):
+        with open(ad) as f:
+            text = f.read()
+        new = re.sub(r'^theme\s*=.*$', 'theme = "%s"' % ("light" if t["light"] else "dark"), text, count=1, flags=re.M)
+        if new != text:
+            mode = os.stat(ad).st_mode & 0o777
+            write(ad, new)
+            os.chmod(ad, mode)   # 0600, as it was
     # the Tasks app only when it runs (its socket for tasks-cli): a launch would start it, also where it is not wanted
     if os.path.exists(os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "tasks-app.sock")):
         run("tasks", "--theme=" + {"chiaro": "light", "scuro": "dark", "nero": "black"}[name])
