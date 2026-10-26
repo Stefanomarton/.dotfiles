@@ -45,20 +45,25 @@ if vm_launch then
     })
 end
 
--- agent-deck: web UI a tutto schermo (servizio utente agent-deck-web), Super+Del
-hl.workspace_rule({
-    workspace = "name:agents",
-    monitor   = screens.main,
-    layout    = "monocle",
-    no_rounding = true,
-    decorate  = false,
-    no_border = true,
-    gaps_in   = 0,
-    gaps_out  = 0,
-})
--- la web UI (aperta da Super+Del, menu.lua) finisce sempre qui
-hl.window_rule({
-    name      = "agent-deck-web",
-    match     = { class = "chrome-127\\.0\\.0\\.1__.*" },
-    workspace = "name:agents",
-})
+-- agent-deck: web UI a tutto schermo, quella locale (servizio utente agent-deck-web) con Super+Del
+-- e quella del desktop via NetBird con Super+Shift+Del (menu.lua); ognuna finisce sempre nel suo workspace
+for _, a in ipairs({
+    { ws = "agents",         class = "chrome-127\\.0\\.0\\.1__.*",          rule = "agent-deck-web" },
+    { ws = "agents-desktop", class = "chrome-100\\.124\\.206\\.219__.*",    rule = "agent-deck-web-desktop" },
+}) do
+    hl.workspace_rule({
+        workspace = "name:" .. a.ws,
+        monitor   = screens.main,
+        layout    = "monocle",
+        no_rounding = true,
+        decorate  = false,
+        no_border = true,
+        gaps_in   = 0,
+        gaps_out  = 0,
+    })
+    hl.window_rule({
+        name      = a.rule,
+        match     = { class = a.class },
+        workspace = "name:" .. a.ws,
+    })
+end
