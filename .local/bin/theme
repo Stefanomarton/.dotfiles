@@ -10,6 +10,7 @@ Writes ~/.local/state/theme/ and tells each program:
   kitty.conf     kitty (include in kitty.conf), reloaded with SIGUSR1
   qt-colors.conf Qt palette, used by qt5ct/qt6ct.conf (written here too), new windows
   desk-theme.el  Emacs (base16 theme `desk`, lisp/appearance.el watches this folder), live
+  Tasks          the desktop app, if it runs (tasks --theme=…; it keeps the choice), live
   GTK: light/dark, theme and font via dconf (live; Chromium and Electron follow it through the
        portal), colours in gtk-{3,4}.0/gtk.css (new windows)
 The Qt and GTK files are written only once home-manager stops owning them (theme.nix).
@@ -206,6 +207,9 @@ def apply(name):
 
     run("hyprctl", "dispatch", "function() apply_theme() end")
     run("pkill", "-USR1", "-x", ".kitty-wrapped")   # the process name of kitty on NixOS
+    # the Tasks app only when it runs (its socket for tasks-cli): a launch would start it, also where it is not wanted
+    if os.path.exists(os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "tasks-app.sock")):
+        run("tasks", "--theme=" + {"chiaro": "light", "scuro": "dark", "nero": "black"}[name])
 
     scheme, gtk = ("prefer-light", "adw-gtk3") if t["light"] else ("prefer-dark", "adw-gtk3-dark")
     for key, value in [("color-scheme", scheme), ("gtk-theme", gtk), ("font-name", f"{FONT} 11"),
