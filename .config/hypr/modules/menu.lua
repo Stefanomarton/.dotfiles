@@ -123,6 +123,10 @@ menu = {
             { "n", "Salta la fase",    qs("pomodoro-skip") },
             { "x", "Ferma",            qs("pomodoro-stop") },
         } },
+        { "Timer di Tasks", bind = S .. "SHIFT + O", group = {
+            { "s", "Scegli un task e avvia", qs("tasktimer-start") },
+            { "x", "Ferma",                  qs("tasktimer-stop") },
+        } },
     } },
     { "Screenshot", {
         { "Area negli appunti", [[grim -g "$(slurp -d -c 00000000 -b 00000080)" - | wl-copy]], S .. "SHIFT + S" },

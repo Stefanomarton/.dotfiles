@@ -20,6 +20,7 @@ hl.on("hyprland.start", function ()
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/notifications/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/whichkey/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/pomodoro/")
+         hl.exec_cmd("qs -p ~/.config/hypr/widgets/tasktimer/")
 
          -- feature homelab di NixOS
          if profile.personal then

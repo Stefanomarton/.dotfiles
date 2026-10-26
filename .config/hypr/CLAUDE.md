@@ -46,6 +46,7 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
 | `workspaces` | Smart picker (Super+S), exposé, `pickers-close` | ordinamento in `rank.js`: `node rank_test.js` |
 | `corner` | nome del workspace in ogni monitor | |
 | `pomodoro` | cornice dello schermo col timer | Super+O poi s/p/n/x; colori del tema: danger = lavoro, ok = pausa, warning = timer fermo |
+| `tasktimer` | badge in alto a sinistra col timer di Tasks in corso (avviato anche da web o telefono) | Super+Shift+O poi s (scegli il task in rofi, `pick.sh`) / x; clic sul badge = ferma; tutto via `tasks-cli` (flake tasks), sondaggio ogni 30 s |
 
 - Schermo dei popup: lista `monitors` in ogni Config.qml, primo collegato vince:
   `["Odyssey G91F", "eDP-1"]` = G9 (desktop o portatile in dock), altrimenti pannello; mai Xiaomi.
