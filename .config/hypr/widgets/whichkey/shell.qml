@@ -75,6 +75,13 @@ ShellRoot {
         return out.join("+")
     }
 
+    // A key as shown, vim-style: a letter lower case, with Shift upper case ("V" -> "v", "Shift+F" -> "F",
+    // "Ctrl+Shift+S" -> "Ctrl+S"); the menu still matches on keyName()'s form
+    function shown(key) {
+        var m = /^((?:Ctrl\+)?(?:Alt\+)?)(Shift\+)?([A-Z])$/.exec(key)
+        return m ? m[1] + (m[2] ? m[3] : m[3].toLowerCase()) : key
+    }
+
     // Dispatch a Lua expression straight on Hyprland's socket (no hyprctl process), optionally
     // after a delay (ms).
     function hypr(expr, delay) {
@@ -273,7 +280,7 @@ ShellRoot {
                     Layout.fillWidth: true
                     Text {
                         Layout.fillWidth: true
-                        text: root.chord ? "Super  " + root.chord.key + "  ›  " + root.chord.label : "Super"
+                        text: root.chord ? "Super  " + root.shown(root.chord.key) + "  ›  " + root.chord.label : "Super"
                         color: Theme.pickerSecondaryText
                         font.pixelSize: Math.round((Config.fontSize - 3) * Theme.textScale)
                         font.family: Theme.fontFamily
@@ -334,7 +341,7 @@ ShellRoot {
                                         spacing: 12
                                         Text {
                                             Layout.preferredWidth: Math.round(Config.keyWidth * Theme.textScale)
-                                            text: modelData.key
+                                            text: root.shown(modelData.key)
                                             color: Theme.accent2
                                             font.pixelSize: Math.round((Config.fontSize - 1) * Theme.textScale)
                                             font.family: Theme.fontFamily
