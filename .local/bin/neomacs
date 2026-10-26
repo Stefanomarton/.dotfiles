@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Neomacs (AppImage) con una copia separata della config Emacs.
+exec nix run nixpkgs#appimage-run -- "$HOME/.local/share/neomacs/neomacs.AppImage" --init-directory "$HOME/.local/share/neomacs/config" "$@"
