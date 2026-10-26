@@ -47,6 +47,12 @@ local function deck_target(dx, dy)
 end
 
 function deck_focus(direction, dx, dy)
+    -- monocle: le finestre sono una sopra l'altra, Super+l/k passano alla precedente/successiva
+    local ws = hl.get_active_workspace()
+    if dy ~= 0 and ws and ws.tiled_layout == "monocle" then
+        hl.dispatch(hl.dsp.window.cycle_next({ next = dy > 0 }))
+        return
+    end
     local target = deck_target(dx, dy)
     hl.dispatch(target and hl.dsp.focus({ window = target }) or hl.dsp.focus({ direction = direction }))
 end
