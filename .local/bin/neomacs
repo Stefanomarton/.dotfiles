@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
-# Neomacs (AppImage) con una copia separata della config Emacs.
-exec nix run nixpkgs#appimage-run -- "$HOME/.local/share/neomacs/neomacs.AppImage" --init-directory "$HOME/.local/share/neomacs/config" "$@"
+# Neomacs (AppImage) con una copia separata della config Emacs, come server "neomacs"
+# (il nome "server" è già di Emacs): la prima volta avvia il server, poi apre solo finestre.
+emacsclient -s neomacs -e t >/dev/null 2>&1 ||
+    nix run nixpkgs#appimage-run -- "$HOME/.local/share/neomacs/neomacs.AppImage" \
+        --init-directory "$HOME/.local/share/neomacs/config" --bg-daemon=neomacs
+exec emacsclient -s neomacs -c "$@"
