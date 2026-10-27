@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
-// The timer of Tasks (tasks.marton.dev) — a badge top left while one runs: «● titolo 0:42» (m:ss), wherever it was started
+// The timer of Tasks (tasks.marton.dev) — a badge top center (like the recorder's) while one runs: «● titolo 0:42» (m:ss), wherever it was started
 // (here, the web, the phone). Super+Shift+O then s: pick a task (rofi) and start it; x or a click on the badge: stop.
 // Everything goes through tasks-cli (the tasks flake, cli/tasks-cli). Run with: qs -p .
 ShellRoot {
@@ -72,11 +72,9 @@ ShellRoot {
             visible: root.running && modelData === root.mainScreen
 
             anchors.top: true
-            anchors.left: true
             margins.top: Config.badgeMargin
-            margins.left: Config.badgeMargin
-            implicitWidth: badgeRow.implicitWidth + 36
-            implicitHeight: badgeRow.implicitHeight + 18
+            implicitWidth: badgeRow.implicitWidth + 44
+            implicitHeight: badgeRow.implicitHeight + 24
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
             WlrLayershell.namespace: "tasktimer-badge"
@@ -93,9 +91,9 @@ ShellRoot {
                 RowLayout {
                     id: badgeRow
                     anchors.centerIn: parent
-                    spacing: 12
+                    spacing: 14
                     Rectangle {
-                        width: 14; height: 14; radius: 7
+                        width: 17; height: 17; radius: 8.5
                         color: Config.dotColor
                         SequentialAnimation on opacity {
                             running: root.running; loops: Animation.Infinite
