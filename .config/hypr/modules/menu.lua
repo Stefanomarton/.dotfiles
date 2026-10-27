@@ -69,7 +69,7 @@ menu = {
     { "App", {
         { "Terminale",            terminal,                                           S .. "Return" },
         { "Browser",              "chromium",                                         S .. "SHIFT + F" },
-        { "Emacs",                "emacs",                                            S .. "SHIFT + E" },
+        { "Neomacs",              "neomacs",                                          S .. "SHIFT + E" },
         { "Appunti (cronologia)", qs("clipboard"),                                  S .. "V" },
         { "Registra chiamata",    "~/.local/bin/meet-rec toggle",                     S .. "SHIFT + R" },
         -- Invio scrive la password, Alt+1 utente+Tab+password, Alt+T copia il TOTP.
