@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# Neomacs (AppImage) con una copia separata della config Emacs. Avvia la finestra con un
-# server "neomacs" dentro (il nome "server" è già di Emacs); se è già aperto, apre una
-# finestra nuova lì. Niente --daemon: in modalità demone Neomacs non sa aprire finestre.
-emacsclient -s neomacs -e t >/dev/null 2>&1 && exec emacsclient -s neomacs -n -c "$@"
-exec nix run nixpkgs#appimage-run -- "$HOME/.local/share/neomacs/neomacs.AppImage" \
-    --init-directory "$HOME/.local/share/neomacs/config" \
-    --eval '(progn (setq server-name "neomacs") (server-start))' "$@"
