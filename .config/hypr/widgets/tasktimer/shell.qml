@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
-// The timer of Tasks (tasks.marton.dev) — a badge top left while one runs: «● titolo 0:42», wherever it was started
+// The timer of Tasks (tasks.marton.dev) — a badge top left while one runs: «● titolo 0:42» (m:ss), wherever it was started
 // (here, the web, the phone). Super+Shift+O then s: pick a task (rofi) and start it; x or a click on the badge: stop.
 // Everything goes through tasks-cli (the tasks flake, cli/tasks-cli). Run with: qs -p .
 ShellRoot {
@@ -27,9 +27,11 @@ ShellRoot {
         return Quickshell.screens[0]
     }
 
+    // m:ss, h:mm:ss from the hour: the seconds tick, so a running timer is seen running
     function fmt(s) {
-        var h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60
-        return h + ":" + (m < 10 ? "0" : "") + m
+        var h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = s % 60
+        var mm = h > 0 && m < 10 ? "0" + m : "" + m
+        return (h > 0 ? h + ":" : "") + mm + ":" + (sec < 10 ? "0" : "") + sec
     }
     function refresh() { if (!statusProc.running) statusProc.running = true }
 
