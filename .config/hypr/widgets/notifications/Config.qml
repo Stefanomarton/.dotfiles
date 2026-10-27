@@ -15,7 +15,7 @@ QtObject {
     readonly property int bodyLines: 4
 
     // ms on screen for every popup, critical and "no timeout" ones too (they stay in history)
-    readonly property int timeout: 2000
+    readonly property int timeout: 1000
     readonly property int idleSeconds: 120   // away from the PC: popups don't expire
     readonly property int historyLength: 100
 
