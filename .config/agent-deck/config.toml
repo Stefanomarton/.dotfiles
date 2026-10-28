@@ -27,6 +27,12 @@ theme = "dark"
 [conductor]
   heartbeat_interval = 15
 
+# Bridge Telegram ↔ regia (servizio agent-deck-conductor-bridge, hosts/desktop/user-services.nix in ~/.nixos).
+# Bot e utente dal file ~/.config/agent-deck/telegram.env (vault: agent-deck-telegram.env).
+[conductor.telegram]
+  token = "$TELEGRAM_BOT_TOKEN"
+  user_id = "$TELEGRAM_USER_ID"
+
 [tmux]
   inject_status_line = false
 
