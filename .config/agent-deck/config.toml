@@ -26,6 +26,8 @@ theme = "dark"
 
 [conductor]
   heartbeat_interval = 15
+  # Niente regole "ask" nei settings dei conductor: decide il loro permission mode (popup di conferma su session stop/start).
+  permission_ask = false
 
 # Bridge Telegram ↔ regia (servizio agent-deck-conductor-bridge, hosts/desktop/user-services.nix in ~/.nixos).
 # Bot e utente dal file ~/.config/agent-deck/telegram.env (vault: agent-deck-telegram.env).
