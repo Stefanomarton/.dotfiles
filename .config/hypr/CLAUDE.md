@@ -74,7 +74,11 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
   per comandi rapidi in sequenza usare `Quickshell.execDetached`.
 - **Live reload di Quickshell**: `sed -i` sostituisce il file e il watcher lo perde; modificare
   in place (Edit/python). Le istanze si chiamano `quickshell`, non `qs`: `pkill -f "qs -p …"`
-  non le trova e `pgrep -f` col percorso trova anche la propria shell.
+  non le trova e `pgrep -f` col percorso trova anche la propria shell. Nemmeno `pgrep -x quickshell`:
+  il nome del processo è `.quickshell-wra` (wrapper Nix). Va bene
+  `pgrep -f '^/nix/store/[^ ]*quickshell -p .*<widget>'`; contare le istanze dopo ogni riavvio
+  (copie doppie = più picker uno sopra l'altro, flash nero, Super+S che non richiude).
+  Riavviarle da Hyprland (`hyprctl dispatch 'hl.dsp.exec_cmd("qs -p …")'`), non dalla shell.
 - **Test dei tasti**: `wtype` non fa scattare le bind di Hyprland (tastiera virtuale);
   serve un dispositivo uinput (python-evdev). Non farlo mentre Stefano usa il PC.
 - **pypr 3.4.6** può morire a un reload della config (perde il socket di hyprctl e fallisce

@@ -28,8 +28,15 @@ QtObject {
     readonly property string currentWorkspaceName: Hyprland.activeWorkspace?.name ?? ""
     readonly property string currentMonitorName: Hyprland.focusedMonitor?.name ?? ""
 
-    // Visible windows, with geometry and focus order from the last IPC refresh (show())
-    readonly property var windows: {
+    // Visible windows, with geometry and focus order from the last IPC refresh (show()).
+    // windows follows windowsLive once per event-loop turn: refreshToplevels() updates the
+    // toplevels one at a time, and a plain binding rebuilt the list and the preview
+    // captures once per window (18-36 times on every open: the stutter).
+    property var windows: []
+    onWindowsLiveChanged: Qt.callLater(syncWindows)
+    Component.onCompleted: syncWindows()
+    function syncWindows() { windows = windowsLive }
+    readonly property var windowsLive: {
         var out = []
         var tls = Hyprland.toplevels.values
         for (var i = 0; i < tls.length; i++) {
