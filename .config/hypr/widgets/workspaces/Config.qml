@@ -9,7 +9,7 @@ QtObject {
     // Workspaces to exclude from picker (by exact name).
     // NOTE: all Hyprland "special:" workspaces are always hidden automatically,
     // so they don't need to be listed here.
-    readonly property var pickerExcludedWorkspaces: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+    readonly property var pickerExcludedWorkspaces: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
     // Windows on these workspaces are excluded from window picker
     // Use strings: "1", "2", "special:scratch", etc. A trailing "*" matches a prefix.

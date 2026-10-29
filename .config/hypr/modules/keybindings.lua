@@ -122,14 +122,13 @@ function navigation_binds(after)
     bind(mainMod .. "+ page_down", hl.dsp.window.cycle_next({next = false}))
     bind(mainMod .. "+ page_up", hl.dsp.window.cycle_next())
 
-    -- Switch workspaces with mainMod + [0-9]
-    -- Move active window to a workspace with ALT + [0-9] (no Super, on purpose),
-    -- move and follow it with mainMod + CTRL + [0-9]
-    for i = 1, 10 do
-        local key = i % 10 -- 10 maps to key 0
-        bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
-        bind(" + ALT + " .. key,     hl.dsp.window.move({ workspace = i, follow=false }))
-        bind(mainMod .. " + CTRL + " .. key, hl.dsp.window.move({ workspace = i, follow=true }))
+    -- Switch workspaces with mainMod + [1-9] (no workspace 10)
+    -- Move active window to a workspace with ALT + [1-9] (no Super, on purpose),
+    -- move and follow it with mainMod + CTRL + [1-9]
+    for i = 1, 9 do
+        bind(mainMod .. " + " .. i,             hl.dsp.focus({ workspace = i}))
+        bind(" + ALT + " .. i,     hl.dsp.window.move({ workspace = i, follow=false }))
+        bind(mainMod .. " + CTRL + " .. i, hl.dsp.window.move({ workspace = i, follow=true }))
     end
 
     -- Volume (repeats while held; capped at 100%)
