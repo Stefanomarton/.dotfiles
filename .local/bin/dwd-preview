@@ -78,9 +78,9 @@ EOF
     # superuser con password usa e getta (solo da qui): senza, serve aprirebbe l'installer nel browser
     admin_pw=$(head -c 24 /dev/urandom | base64 | tr -d '/+')
     pocketbase superuser upsert admin@preview.local "$admin_pw" "${common[@]}" >/dev/null
-    # come testing (nixosModules.testing): dossier, library e task force accesi; niente ECHA né posta vera
+    # come testing (nixosModules.testing): dossier, library, task force e leads accesi; niente ECHA né posta vera
     env PREVIEW_APP="$wt/app" APP_URL=https://dwd-preview.marton.dev "APP_NAME=DWD tools (preview)" \
-      TASKFORCE=on LIBRARY=on TUNNEL=on ECHA_CRON=off DISCUSSION_MAIL=off MAIL_SINK="$state/mails.jsonl" BROWSER=true \
+      TASKFORCE=on LIBRARY=on LEADS=on TUNNEL=on ECHA_CRON=off DISCUSSION_MAIL=off MAIL_SINK="$state/mails.jsonl" BROWSER=true \
       pocketbase serve --http=127.0.0.1:$port --publicDir="$wt/app" --hooksDir="$hooks" --hooksWatch=false \
         --automigrate=false "${common[@]}" &
     local pid=$! up= n=0
