@@ -7,14 +7,12 @@
 #   dwd-preview serve           lo usa il servizio (~/.config/systemd/user/dwd-preview.service)
 # Pagine e script: basta ricaricare. server/pb_hooks e pb_migrations: il server riparte da solo.
 # Dati finti e suoi (~/.local/state/dwd-preview): mai copie di testing o production, un solo utente
-# anteprima@preview.local, password nel vault (dwd-preview-login) e in ~/.config/dwd-preview/login (file vero, così
-# al boot non serve rbw sbloccato).
+# anteprima@preview.local che entra da solo (nessuna password: l'accesso lo protegge Cloudflare Access).
 set -euo pipefail
 
-port=8097 unit=dwd-preview email=anteprima@preview.local
+port=8097 unit=dwd-preview
 repo=$HOME/.marton-drive/work/projects/lettore-dwd
 state=${XDG_STATE_HOME:-$HOME/.local/state}/dwd-preview
-pw_file=$HOME/.config/dwd-preview/login
 mkdir -p "$state"
 
 valid() { [[ -f $1/app/index.html && -d $1/server/pb_hooks ]]; }
@@ -44,7 +42,20 @@ serve() {
     rm -rf "$hooks"; mkdir -p "$hooks"
     for f in "$wt"/server/pb_hooks/*; do [[ ${f##*/} == cache.pb.js ]] || ln -s "$f" "$hooks/"; done
     cat > "$hooks/preview.pb.js" <<'EOF'
-/// Solo anteprima. Niente cache da nessuna parte: Cloudflare riscrive no-cache in max-age=14400 su .js/.css, quindi
+/// Solo anteprima. Si entra da soli come anteprima@preview.local (password casuale mai conservata): chi arriva qui è
+/// già passato da Cloudflare Access e i dati sono finti. Le pagine si prendono il token prima di shell.js.
+routerAdd("POST", "/api/preview-login", (e) => {
+  let u;
+  try { u = e.app.findAuthRecordByEmail("users", "anteprima@preview.local"); }
+  catch (_) {
+    u = new Record(e.app.findCollectionByNameOrId("users"));
+    u.setEmail("anteprima@preview.local"); u.setVerified(true); u.set("name", "Anteprima");
+  }
+  u.setPassword($security.randomString(32));
+  e.app.save(u);
+  return e.json(200, { token: u.newAuthToken(), user: u });
+});
+/// Niente cache da nessuna parte: Cloudflare riscrive no-cache in max-age=14400 su .js/.css, quindi
 /// le pagine chiedono script e stili con ?v=<ora> (come il build Nix con la versione) e tutto va con no-store.
 routerUse((e) => {
   const p = e.request.url.path;
@@ -57,10 +68,13 @@ routerUse((e) => {
   if (!p.endsWith("/") && !p.endsWith(".html")) return e.next();
   let html;
   try { html = toString($os.readFile($os.getenv("PREVIEW_APP") + (p.endsWith("/") ? p + "index.html" : p))); } catch (_) { return e.next(); }
-  return e.html(200, html.replace(/(src|href)="([A-Za-z0-9_.\/-]+\.(js|css))"/g, `$1="$2?v=${Date.now()}"`));
+  // (dentro l'handler: gli hook non vedono le variabili di fuori)
+  const auto = `<script>try { if (!localStorage.getItem('dwd.auth')) { var x = new XMLHttpRequest(); x.open('POST', '/api/preview-login', false); x.send();
+    if (x.status === 200) localStorage.setItem('dwd.auth', x.responseText); } } catch (e) {}</script>`;
+  return e.html(200, html.replace(/<head>/i, "<head>" + auto).replace(/(src|href)="([A-Za-z0-9_.\/-]+\.(js|css))"/g, `$1="$2?v=${Date.now()}"`));
 });
 EOF
-    local common=(--dir="$data" --migrationsDir="$wt/server/pb_migrations") admin_pw tok body id
+    local common=(--dir="$data" --migrationsDir="$wt/server/pb_migrations") admin_pw
     # superuser con password usa e getta (solo da qui): senza, serve aprirebbe l'installer nel browser
     admin_pw=$(head -c 24 /dev/urandom | base64 | tr -d '/+')
     pocketbase superuser upsert admin@preview.local "$admin_pw" "${common[@]}" >/dev/null
@@ -72,15 +86,6 @@ EOF
     local pid=$! up= n=0
     for _ in $(seq 60); do curl -sf "$api/health" >/dev/null && { up=1; break; }; kill -0 $pid 2>/dev/null || break; sleep 1; done
     if [[ $up ]]; then
-      # l'utente di anteprima con la password del file (creato la prima volta, riallineato le altre)
-      if [[ -s $pw_file ]]; then
-        tok=$(curl -sf "$api/collections/_superusers/auth-with-password" -H 'content-type: application/json' \
-          -d "{\"identity\":\"admin@preview.local\",\"password\":\"$admin_pw\"}" | jq -r .token)
-        body=$(jq -n --rawfile pw "$pw_file" --arg e "$email" '($pw|rtrimstr("\n")) as $p | {email:$e, password:$p, passwordConfirm:$p, name:"Anteprima", verified:true}')
-        id=$(curl -sf -G "$api/collections/users/records" -H "Authorization: $tok" --data-urlencode "filter=email='$email'" | jq -r '.items[0].id // empty')
-        if [[ -n $id ]]; then curl -sf -X PATCH "$api/collections/users/records/$id" -H "Authorization: $tok" -H 'content-type: application/json' -d "$body" >/dev/null
-        else curl -sf "$api/collections/users/records" -H "Authorization: $tok" -H 'content-type: application/json' -d "$body" >/dev/null; fi
-      fi
       echo "dwd-preview: pronto su 127.0.0.1:$port"
     else
       echo "dwd-preview: PocketBase non parte (un hook o una migrazione sbagliati?): riprovo alla prossima modifica" >&2
@@ -101,10 +106,8 @@ case ${1:-status} in
     if [[ -n ${2:-} ]]; then wt=$(realpath "$2"); valid "$wt" || { echo "dwd-preview: $wt non è un checkout di lettore-dwd" >&2; exit 1; }
     else wt=main; fi
     echo "$wt" > "$state/worktree"
-    # la prima volta: password dell'utente di anteprima nel vault e in un file vero (chiede di sbloccare rbw)
-    [[ -s $pw_file ]] || head -c 15 /dev/urandom | base64 | tr -d '/+\n' | secret-put dwd-preview-login .config/dwd-preview/login copia
     systemctl --user restart "$unit"
-    echo "anteprima: $wt → https://dwd-preview.marton.dev (utente $email, password: rbw get --field notes dwd-preview-login)" ;;
+    echo "anteprima: $wt → https://dwd-preview.marton.dev" ;;
   off) systemctl --user stop "$unit"; echo "anteprima spenta fino al prossimo «dwd-preview on» o riavvio" ;;
   status)
     m=$(mode); [[ $m == main ]] && m="main ($(git -C "$state/main" log -1 --format='%h %cr' 2>/dev/null))"
