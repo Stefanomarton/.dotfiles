@@ -1,0 +1,15 @@
+# Anteprima live di lettore-dwd (dwd-preview.marton.dev → tunnel desktop-agentdeck → 127.0.0.1:8097): ~/.local/bin/dwd-preview.
+# Installata con `systemctl --user enable --now ~/.dotfiles/.config/systemd/user/dwd-preview.service`.
+[Unit]
+Description=Anteprima live di lettore-dwd (127.0.0.1:8097)
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=%h/.local/bin/dwd-preview serve
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
