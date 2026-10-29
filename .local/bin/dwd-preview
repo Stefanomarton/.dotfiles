@@ -6,7 +6,8 @@
 #   dwd-preview status | log
 #   dwd-preview serve           lo usa il servizio (~/.config/systemd/user/dwd-preview.service)
 # Pagine e script: basta ricaricare. server/pb_hooks e pb_migrations: il server riparte da solo.
-# Dati finti e suoi (~/.local/state/dwd-preview): mai copie di testing o production, un solo utente
+# Dati finti e suoi (~/.local/state/dwd-preview), mai copie di testing o production, tranne (Stefano, 29/10) i leads
+# dell'estratto del 29/10 e registranti/notifiche ECHA da prod-copy.db, caricati a mano. Un solo utente
 # anteprima@preview.local che entra da solo (nessuna password: l'accesso lo protegge Cloudflare Access).
 set -euo pipefail
 
