@@ -13,7 +13,7 @@ hl.config({
         resize_on_border = false,
         allow_tearing    = false,
 
-        layout = "lua:custom_center2",
+        layout = "master",   -- master al centro, le altre ai lati (layouts.lua)
     },
 
     decoration = {
@@ -67,13 +67,22 @@ function apply_theme()
     local ok, t = pcall(dofile, os.getenv("HOME") .. "/.local/state/theme/hypr.lua")
     if not ok then
         t = { active = "rgba(7a9bf5ee)", active2 = "rgba(7a9bf5ee)", inactive = "rgba(2c2c31aa)",
-              shadow = "rgba(00000000)", accent = "rgb(7a9bf5)", radius = 4 }
+              shadow = "rgba(00000000)", accent = "rgb(7a9bf5)", radius = 4,
+              surface = "rgb(0d0d0d)", ink = "rgb(f2f2f2)", accent_text = "rgb(0a0f1c)", warn = "rgb(e6b071)" }
     end
     theme_accent = t.accent   -- the layout HUD in menu.lua
     hl.config({
         general    = { col = { active_border = { colors = { t.active, t.active2 }, angle = 45 },
                                inactive_border = t.inactive } },
         decoration = { rounding = t.radius, shadow = { color = t.shadow } },
+        -- gruppi (groups.lua): bloccato = colore di avviso
+        group      = { col = { border_active = t.active, border_inactive = t.inactive,
+                               border_locked_active = t.warn, border_locked_inactive = t.inactive },
+                       groupbar = { col = { active = t.accent, inactive = t.surface,
+                                            locked_active = t.warn, locked_inactive = t.surface },
+                                    text_color = t.accent_text, text_color_inactive = t.ink,
+                                    text_color_locked_active = t.accent_text,
+                                    text_color_locked_inactive = t.ink } },
     })
 end
 apply_theme()

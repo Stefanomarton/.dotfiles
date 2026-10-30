@@ -95,6 +95,9 @@ menu = {
         { "Exposé",                qs("expose"),               S .. "E" },
         { "Schermo intero",        hl.dsp.window.fullscreen(), S .. "F" },
         { "Chiudi finestra",       hl.dsp.window.close(),      S .. "Q" },
+        -- groups.lua; Super+l/k scorrono le schede
+        { "Gruppo: crea / entra / blocca", group_smart,        S .. "G" },
+        { "Scomponi il gruppo",    group_dissolve,             S .. "SHIFT + G" },
         { "Scambia i due monitor", "~/.config/hypr/scripts/swap_monitor_windows.sh", S .. "T" },
         -- ~/.local/bin/theme: widget, bordi, rofi, tofi, kitty e GTK insieme
         { "Tema", bind = S .. "SHIFT + T", group = {
@@ -103,7 +106,7 @@ menu = {
             { "n", "Nero",   "~/.local/bin/theme nero" },
         } },
         { "Layout del workspace", bind = S .. "SHIFT + L", group = {
-            { "m", "Master",    layout("lua:custom_center2", "Master") },
+            { "m", "Master",    layout("master",             "Master") },
             { "f", "Monocle",   layout("monocle",            "Monocle") },
             { "s", "Scrolling", layout("scrolling",          "Scrolling") },
             { "d", "Dwindle",   layout("dwindle",            "Dwindle") },

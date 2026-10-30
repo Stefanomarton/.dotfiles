@@ -18,6 +18,19 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
   nel submap `whichkey`. Non si apre se il puntatore si è mosso (Super+trascina), se è aperto un
   pannello con la tastiera (`blockers`) o se nel frattempo è scattata una scorciatoia
   (`whichkey-cancel`). Si chiude da solo `autoClose` ms dopo il rilascio di Super.
+- Gruppi (schede): `modules/groups.lua`. Super+G = `group_smart` (in un gruppo blocca/sblocca;
+  fuori entra nel gruppo del workspace o ne crea uno), Super+Shift+G scompone (`group_dissolve`), Super+l/k scorrono le schede (`nav_focus`).
+  App di messaggi (`MESSAGING`, pattern sulla classe) sempre in un gruppo bloccato. Colori della
+  barra da `apply_theme()`.
+- Layout di default: Master standard al centro (`layouts.lua`; il layout a carte è stato tolto).
+  Su G9 e Xiaomi, workspace 1-9, margini laterali con 1 finestra (900) e 2 (500 sul G9, 200 sullo Xiaomi) via regole
+  di workspace `w[tv1]`/`w[tv2]`. La pila diventa gruppi (`stack_normalize` in `groups.lua`):
+  G9/Xiaomi fino a 3 finestre senza gruppi, dalla 4ª un gruppo per lato; portatile master + un
+  gruppo. I gruppi fatti così si sciolgono quando le finestre calano; chiusa la master, la scheda
+  visibile del gruppo diventa master. Usa `group:remove`, non `move out_of_group` (dà sempre il
+  focus e fa saltare di workspace).
+  Super+S, Ctrl+Invio su una finestra: `bring_master` (groups.lua) la porta qui e la fa master.
+  Dopo spostamenti e chiusure la normalizzazione aspetta 30 ms: nell'evento il layout è vecchio.
 - Super+Esc = `clean_screen` in menu.lua: nasconde scratchpad (`pypr hide '*'`), popup,
   picker, menu, tofi, rofi.
 - Super+Ctrl+W = VM Windows a schermo intero nel workspace `w11` (voce del menu → `vm_enter` in

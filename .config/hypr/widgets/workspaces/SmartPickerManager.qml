@@ -144,10 +144,14 @@ QtObject {
     function closeWin(addr) { return "hl.dsp.window.close({ window = " + q("address:" + addr) + " })" }
     function moveWs(name, mon) { return "hl.dsp.workspace.move({ workspace = " + q("name:" + name) + ", monitor = " + q(mon) + " })" }
 
+    // Lua in groups.lua: porta qui la finestra e ne fa la master (istruzione, non dispatcher)
+    function bringMaster(addr) { return "bring_master(" + q(addr) + ")" }
+
     function run(calls) {
         if (calls.length === 0) return
-        Hyprland.dispatch(calls.length === 1 ? calls[0]
-            : "function() " + calls.map(function(c) { return "hl.dispatch(" + c + ")" }).join("; ") + " end")
+        var lua = function(c) { return c.indexOf("hl.dsp.") === 0 ? "hl.dispatch(" + c + ")" : c }
+        Hyprland.dispatch(calls.length === 1 && calls[0].indexOf("hl.dsp.") === 0 ? calls[0]
+            : "function() " + calls.map(lua).join("; ") + " end")
     }
 
     // === Open / close ===
@@ -186,7 +190,7 @@ QtObject {
         var sel = selectedWindows
 
         if (ctrl && sel.length > 0) {
-            run(sel.map(function(a) { return moveWin(a, "e+0") }))
+            run(sel.map(bringMaster))
         } else if (row.kind === "ws" || row.kind === "new") {
             if (moveMode) {
                 if (!openedAddress) return
@@ -204,7 +208,7 @@ QtObject {
                 run([focusWs(row.name)])   // a missing named workspace is created
             }
         } else if (row.kind === "win") {
-            run(ctrl ? [moveWin(row.address, "e+0"), focusWin(row.address)] : [focusWin(row.address)])
+            run([ctrl ? bringMaster(row.address) : focusWin(row.address)])
         } else if (row.kind === "app") {
             row.ref.execute()
         } else if (row.kind === "cmd") {

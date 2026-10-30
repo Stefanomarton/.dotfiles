@@ -129,7 +129,9 @@ def render(t, s=1.0):
         "theme.json": json.dumps(qml | {"frame": frame, "radius": RADIUS, "border": 1}, indent=1),
         "hypr.lua": f'return {{ active = "rgba({t["accent"][1:]}ee)", active2 = "rgba({t["accent"][1:]}ee)", '
                     f'inactive = "rgba({t["ruleHi"][1:]}aa)", shadow = "rgba({t["shadow"]})", '
-                    f'accent = "rgb({t["accent"][1:]})", radius = {RADIUS} }}\n',
+                    f'accent = "rgb({t["accent"][1:]})", radius = {RADIUS}, '
+                    f'surface = "rgb({t["surface"][1:]})", ink = "rgb({t["ink"][1:]})", '
+                    f'accent_text = "rgb({t["accentText"][1:]})", warn = "rgb({t["warn"][1:]})" }}\n',
         "rofi.rasi": f'configuration {{ font: "{FONT} {pt}"; }}\n'
                      "* { " + " ".join(f"{k}: {t[v]};" for k, v in
                      [("bg", "bg"), ("raised", "surface"), ("fg", "ink"), ("dim", "ink3"),
