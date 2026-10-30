@@ -54,3 +54,14 @@ unfocus = "hide"
 margin = 60
 position = "25% 25%"
 size = "50% 50%"
+
+# Claude in home, senza permessi: Super+Shift+C mostra/nasconde; Super+Alt+C detta senza mostrarlo (hypr/scripts/dettatura-claude.sh, via socket @kitty-claude)
+[scratchpads.claude]
+animation = ""
+command = "kitty --class kitty-claude -o allow_remote_control=socket-only --listen-on unix:@kitty-claude --directory ~ claude --model sonnet --dangerously-skip-permissions"
+class = "kitty-claude"
+lazy = true
+unfocus = "hide"
+margin = 60
+position = "25% 5%"
+size = "50% 60%"

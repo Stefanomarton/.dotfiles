@@ -80,6 +80,7 @@ menu = {
         { "Agent Deck desktop",   agents_workspace("agents-desktop", "100.124.206.219", "rbw get 'agent-deck web token'"), S .. "SHIFT + DELETE" },
         -- Super+Alt+D (dettatura diretta) è di hyprwhspr-rs
         { "Dettatura in Emacs",   "~/.config/hypr/scripts/dettatura-emacs.sh",        S .. "ALT + E" },
+        { "Dettatura in Claude",  "~/.config/hypr/scripts/dettatura-claude.sh",       S .. "ALT + C" },
         -- di nuovo Super+Ctrl+W per uscire: submap "clean" in keybindings.lua
         { "VM Windows",           vm_enter,                                           S .. "CTRL + W" },
     } },
@@ -89,6 +90,7 @@ menu = {
         { "Editor",             "pypr toggle editor", S .. "X" },
         { "Terminale",          "pypr toggle term",   S .. "I" },
         { "Calcolatrice",       "pypr toggle qalc",   S .. "C" },
+        { "Claude veloce",      "pypr toggle claude", S .. "SHIFT + C" },
     } },
     { "Finestre", {
         { "Cerca e apri",          qs("smart"),                S .. "S" },
