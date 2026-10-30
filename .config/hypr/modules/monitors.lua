@@ -13,6 +13,7 @@ hl.monitor({
     mode     = profile.laptop and "5120x1440@60" or "5120x1440@144",
     position = "0x0",
     scale    = "1.066",
+    vrr      = 0,   -- il G9 non annuncia adaptive sync: con misc.vrr = 2 ogni schermo intero tentava e rifaceva il modeset (nero)
 })
 
 hl.monitor({

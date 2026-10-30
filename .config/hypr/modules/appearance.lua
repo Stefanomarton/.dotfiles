@@ -52,6 +52,12 @@ hl.config({
     xwayland = {
         force_zero_scaling = true,  -- X11 apps sharp on fractional-scale monitors instead of blurry
     },
+
+    -- Auto HDR passava il G9 in HDR a ogni finestra a schermo intero (Tasks sul ws 3):
+    -- modeset = schermo nero, e l'avviso "not in 10-bit mode" (il G9 è a 8 bit)
+    render = {
+        cm_auto_hdr = 0,
+    },
 })
 
 -- Border colours, rounding and shadow from the desktop theme, the same as the widgets.
