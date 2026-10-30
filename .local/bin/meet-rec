@@ -3,8 +3,8 @@
 # Uso: meet-rec          registra in primo piano (in ~/inbox/meet/meet-AAAA-MM-GG-HHMM/; fermare con q o un solo Ctrl+C)
 #      meet-rec toggle   avvia/ferma la registrazione come servizio utente "meet-rec"
 #                        (Super+Shift+R in Hyprland; il widget widgets/recorder mostra lo stato)
-# A registrazione finita parte da sola la trascrizione (skill trascrivi, unità "trascrivi-meet-…"):
-# <nome>.txt, .srt e .min.txt nella stessa cartella. Log: journalctl --user -u 'trascrivi-meet-*'
+# Il resto lo fa l'archivista sul server (CT 114 automations): quando il file è sincronizzato su Nextcloud e fermo da
+# 2 minuti lo trascrive, manda la proposta su Telegram (Hermes) e dopo la conferma sposta la cartella. Qui solo la registrazione.
 set -euo pipefail
 
 if [[ ${1:-} == toggle ]]; then
@@ -38,7 +38,3 @@ ffmpeg -hide_banner $([ -t 2 ] || echo -nostdin -nostats) \
   -filter_complex amix=inputs=2:duration=longest:normalize=0 -c:a aac -b:a 96k \
   -movflags +frag_keyframe+empty_moov+default_base_moof -frag_duration 5000000 -flush_packets 1 \
   "$out" || true   # q/Ctrl+C/stop fanno uscire ffmpeg con 255: il file è comunque buono
-
-# Unità a parte: sopravvive allo stop di meet-rec e non tiene occupato il terminale.
-[ -s "$out" ] && systemd-run --user --unit="trascrivi-$name" -q --working-directory="$PWD" \
-  ~/.claude/skills/trascrivi/trascrivi.sh "$out" auto
