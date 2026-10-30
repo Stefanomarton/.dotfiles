@@ -156,3 +156,13 @@ hl.window_rule({
     size    = {"(monitor_w*0.4)", "(monitor_h*0.35)"},
     monitor = screens.main,
 })
+
+-- Super+W: the Tasks quick-add alone (tasks --quick-add-mini), a small transparent Electron window like a spotlight
+hl.window_rule({
+    name  = "tasks-quick-add",
+    match = { class = "^tasks$", title = "^Tasks rapido$" },
+    float      = true,
+    center     = true,
+    decorate   = false,
+    dim_around = true,
+})
