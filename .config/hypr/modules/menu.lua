@@ -72,8 +72,8 @@ menu = {
         { "Neomacs",              "neomacs",                                          S .. "SHIFT + E" },
         { "Appunti (cronologia)", qs("clipboard"),                                  S .. "V" },
         { "Registra chiamata",    "~/.local/bin/meet-rec toggle",                     S .. "SHIFT + R" },
-        -- una riga con la sintassi rapida di Tasks («Chiamare fornitore !domani 9:00 ~lavoro»), via tasks-cli
-        { "Nuovo task",           "~/.local/bin/task-veloce",                         S .. "W" },
+        -- l'app Tasks in primo piano col quick-add aperto (sintassi rapida con i suggerimenti di liste e tag)
+        { "Nuovo task",           "tasks --quick-add",                                S .. "W" },
         -- Invio scrive la password, Alt+1 utente+Tab+password, Alt+T copia il TOTP.
         -- Vault bloccato prima (chiede sempre la master password) e dopo: sbloccato solo durante la scelta
         { "Password",             "rbw lock; rofi-rbw --selector rofi; rbw lock",     S .. "P" },
