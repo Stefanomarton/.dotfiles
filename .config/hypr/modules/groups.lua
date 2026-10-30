@@ -28,7 +28,8 @@ hl.config({
             font_weight_active   = "bold",
             font_weight_inactive = "normal",
             rounding             = 4,
-            gaps_in              = 4,
+            gaps_in              = 0,      -- schede attaccate: con lo spazio in mezzo si vedeva una lineetta dello sfondo
+            round_only_edges     = true,   -- arrotondati solo i due estremi della barra
             middle_click_close   = true,
             scrolling            = true,   -- rotella sulla barra = scheda accanto
         },
