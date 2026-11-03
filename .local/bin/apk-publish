@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Builds an Android app's release APK and publishes it for Obtainium at https://tasks.marton.dev/android/<APP>/
+# (a page with one link to the latest APK; /android/ lists the apps). Served by the Tasks server from
+# /var/lib/tasks/android (pb_hooks/android.pb.js), public: Cloudflare Access bypasses /android.
+#   apk-publish APP [GRADLE_DIR]      e.g. apk-publish tasks ~/work/projects/tasks/android
+#                                          apk-publish registro-chiamate ~/work/projects/registro-chiamate
+set -euo pipefail
+(( $# >= 1 )) && [[ $1 =~ ^[a-z0-9-]+$ ]] || { sed -n '5,6s/^# *//p' "$0" >&2; exit 2; }
+app=$1 host=root@192.168.1.251 dest=/var/lib/tasks/android
+# The one key of all the apps: ~/.local/share/android/debug.keystore ($ANDROID_USER_HOME), base64 copy in the vault
+# (android-debug-keystore). A different key = the phone refuses the update, so never publish one.
+cert=86e0a4802fdb5cb7b762a799ecd09c0f2f6b94e733d3511478bb150baa88573c
+cd "${2:-.}"
+apk=app/build/outputs/apk/release/app-release.apk
+nix develop -c ./gradlew -q assembleRelease
+read -r version signer < <(nix develop -c sh -c '
+    bt=$(ls -d "$ANDROID_HOME"/build-tools/* | tail -1)
+    v=$("$bt/aapt2" dump badging "$1" | sed -n "s/.*versionName='"'"'\([^'"'"']*\)'"'"'.*/\1/p")
+    s=$("$bt/apksigner" verify --print-certs "$1" 2>/dev/null | sed -n "s/.*SHA-256 digest: //p" | head -1)
+    echo "$v $s"' _ "$apk")
+[[ $signer == "$cert" ]] || { echo "apk-publish: APK firmato con un'altra chiave ($signer), non pubblicato" >&2; exit 1; }
+[[ $version =~ ^[0-9.]+$ ]] || { echo "apk-publish: versionName non letto ($version)" >&2; exit 1; }
+name="$app-$version.apk"
+ssh "$host" mkdir -p "$dest/$app"
+scp -q "$apk" "$host:$dest/$app/.$name.part"
+# new APK, then the page, then the old APKs away (Obtainium never sees a link to a missing file)
+ssh "$host" sh -s "$dest" "$app" "$name" <<'SH'
+set -e
+cd "$1/$2"
+mv ".$3.part" "$3"
+printf '<!doctype html><meta charset="utf-8"><title>%s</title><a href="%s">%s</a>\n' "$2" "$3" "$3" > .index.html
+mv .index.html index.html
+find . -maxdepth 1 -name '*.apk' ! -name "$3" -delete
+cd ..
+{ echo '<!doctype html><meta charset="utf-8"><title>Android</title>'
+  for d in */; do echo "<p><a href=\"$d\">${d%/}</a>"; done; } > index.html
+chown -R tasks:tasks "$1"
+SH
+code=$(curl -s -o /dev/null -w '%{http_code}' "http://${host#*@}:8090/android/$app/$name")
+[[ $code == 200 ]] || { echo "apk-publish: il server risponde $code per $name" >&2; exit 1; }
+echo "apk-publish: $name → https://tasks.marton.dev/android/$app/"
