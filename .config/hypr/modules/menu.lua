@@ -136,7 +136,7 @@ menu = {
         } },
     } },
     { "Screenshot", {
-        { "Screenshot", bind = S .. "SHIFT + S", group = {
+        { "Screenshot", bind = S .. "M", group = {
             { "s",         "Area negli appunti",     "~/.config/hypr/scripts/shot.sh area clip" },
             { "SHIFT + S", "Area in inbox",          "~/.config/hypr/scripts/shot.sh area inbox" },
             { "f",         "Finestra negli appunti", "~/.config/hypr/scripts/shot.sh window clip" },

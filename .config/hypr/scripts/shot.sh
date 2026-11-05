@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Screenshot: shot.sh area|window clip|inbox (menu.lua, Super+Shift+S then s/S/f/F).
+# Screenshot: shot.sh area|window clip|inbox (menu.lua, Super+M then s/S/f/F).
 set -euo pipefail
 
 sleep 0.15 # the which-key menu has to be gone from the screen first
