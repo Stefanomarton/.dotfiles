@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 # Registra una chiamata: il microfono che usa davvero l'app (es. Meet in Chromium) + l'audio di sistema.
 # Uso: meet-rec          registra in primo piano (in ~/inbox/meet/meet-AAAA-MM-GG-HHMM/; fermare con q o un solo Ctrl+C)
-#      meet-rec toggle   avvia/ferma la registrazione come servizio utente "meet-rec"
+#      meet-rec toggle   avvia/ferma la registrazione come servizio utente "meet-rec", dopo conferma con rofi
 #                        (Super+Shift+R in Hyprland; il widget widgets/recorder mostra lo stato)
 # Il resto lo fa l'archivista sul server (CT 114 automations): quando il file è sincronizzato su Nextcloud e fermo da
 # 2 minuti lo trascrive, manda la proposta su Telegram (Hermes) e dopo la conferma sposta la cartella. Qui solo la registrazione.
 set -euo pipefail
 
+# Cambia stato solo la scelta esplicita entro 20 s: Annulla è la prima voce (Invio non ferma nulla),
+# Esc, scadenza o rofi che non parte lasciano tutto com'è.
+conferma() {
+  local scelta
+  scelta=$(printf 'Annulla\n%s\n' "$2" | timeout 20 rofi -dmenu -i -no-custom -p "$1" 2>/dev/null) || return 1
+  [[ $scelta == "$2" ]]
+}
+
 if [[ ${1:-} == toggle ]]; then
   if systemctl --user is-active -q meet-rec; then
+    conferma "Registrazione in corso" "Ferma la registrazione" || exit 0
     exec systemctl --user stop meet-rec   # KillSignal=SIGINT: ffmpeg chiude il file pulito
   fi
+  conferma "Registratore chiamate" "Avvia la registrazione" || exit 0
   systemctl --user reset-failed meet-rec 2>/dev/null || true
   exec systemd-run --user --unit=meet-rec -q -p KillSignal=SIGINT -p SuccessExitStatus=255 -p TimeoutStopSec=10 "$0"
 fi
@@ -31,10 +41,14 @@ out="$name.m4a"
 echo "Microfono: $mic_desc ($mic)"
 echo "File: $PWD/$out"
 
+# Due voci in un solo file: sinistra = microfono (Stefano), destra = audio di sistema (gli altri). L'etichetta dice
+# all'archivista che può trascriverle separate; chi non la legge vede un normale stereo con tutta la chiamata.
+# apad: se un ingresso finisce (cuffie staccate) l'altro continua a registrare.
 # MP4 frammentato: se ffmpeg viene ucciso il file resta leggibile fino all'ultimo frammento (5 s).
 # Senza terminale (servizio) niente riga di avanzamento, che riempirebbe il journal.
 ffmpeg -hide_banner $([ -t 2 ] || echo -nostdin -nostats) \
   -f pulse -i "$mic" -f pulse -i @DEFAULT_MONITOR@ \
-  -filter_complex amix=inputs=2:duration=longest:normalize=0 -c:a aac -b:a 96k \
+  -filter_complex '[0:a]pan=mono|c0=0.5*c0+0.5*c1,apad[m];[1:a]pan=mono|c0=0.5*c0+0.5*c1,apad[s];[m][s]amerge=inputs=2[o]' \
+  -map '[o]' -c:a aac -b:a 96k -aac_ms 0 -metadata comment=meet-rec:mic-sx,sistema-dx \
   -movflags +frag_keyframe+empty_moov+default_base_moof -frag_duration 5000000 -flush_packets 1 \
   "$out" || true   # q/Ctrl+C/stop fanno uscire ffmpeg con 255: il file è comunque buono

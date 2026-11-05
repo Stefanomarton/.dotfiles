@@ -55,7 +55,7 @@ Gira su desktop (G9 + Xiaomi) e sui portatili (`laptop`, `tm-laptop`): profili i
 | `shared/Theme.qml` | colori (da `theme.json`), font, `textScale` | tutti i `Theme.qml` sono symlink a questo |
 | `whichkey` | menu tenendo Super | |
 | `notifications` | server notifiche (al posto di dunst) | Super+N/Shift+N/Ctrl+N/Alt+N, Super+D non disturbare |
-| `recorder` | badge e popup di `~/.local/bin/meet-rec` | la registrazione è il servizio utente `meet-rec` |
+| `recorder` | badge e popup di `~/.local/bin/meet-rec` | la registrazione è il servizio utente `meet-rec`; `toggle` (scorciatoia, menu, badge) chiede conferma con rofi |
 | `volume` | OSD del volume | |
 | `workspaces` | Smart picker (Super+S), exposé, `pickers-close` | ordinamento in `rank.js`: `node rank_test.js` |
 | `corner` | nome del workspace in ogni monitor | |
