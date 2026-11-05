@@ -136,9 +136,13 @@ menu = {
         } },
     } },
     { "Screenshot", {
-        { "Area negli appunti", [[grim -g "$(slurp -d -c 00000000 -b 00000080)" - | wl-copy]], S .. "SHIFT + S" },
-        { "Area temporanea",    "~/.config/hypr/scripts/temp_screenshot.sh",                  S .. "CTRL + SHIFT + S" },
-        { "Area in inbox",      [[mkdir -p ~/inbox/screenshots && grim -g "$(slurp -d -c 00000000 -b 00000080)" ~/inbox/screenshots/"$(date +'%Y%m%dT%H%M%S')".png]], S .. "ALT + S" },
+        { "Screenshot", bind = S .. "SHIFT + S", group = {
+            { "s",         "Area negli appunti",     "~/.config/hypr/scripts/shot.sh area clip" },
+            { "SHIFT + S", "Area in inbox",          "~/.config/hypr/scripts/shot.sh area inbox" },
+            { "f",         "Finestra negli appunti", "~/.config/hypr/scripts/shot.sh window clip" },
+            { "SHIFT + F", "Finestra in inbox",      "~/.config/hypr/scripts/shot.sh window inbox" },
+            { "t",         "Area temporanea",        "~/.config/hypr/scripts/temp_screenshot.sh" },
+        } },
     } },
     { "Sessione", {
         { "Pulisci schermo",  clean_screen,  S .. "ESCAPE" },
