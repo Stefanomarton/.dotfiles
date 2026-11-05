@@ -65,13 +65,20 @@ if profile.laptop then
 
     -- Coperchio chiuso con monitor esterni: pannello spento. Senza esterni non si tocca
     -- (logind sospende; con un monitor esterno collegato invece ignora il coperchio).
-    -- Posizione: sotto il G9 in dock, 0x0 da solo. Senza esterni auto-center-down lo mette a
+    -- Posizione: sotto il G9 in dock, altrimenti 0x0. Senza G9 auto-center-down lo mette a
     -- x = -960, e virt-viewer a schermo intero non ridimensiona la VM (SPICE scarta le x negative).
+    local function g9_connected()
+        for _, m in ipairs(hl.get_monitors()) do
+            if (m.description or ""):find("Odyssey G91F", 1, true) then return true end
+        end
+        return false
+    end
+
     local panel_state = nil
     local function update_panel(closed)
         local external = external_connected()
         local want = not (closed and external)
-        local position = external and "auto-center-down" or "0x0"
+        local position = g9_connected() and "auto-center-down" or "0x0"
         local state = tostring(want) .. " " .. position
         if state ~= panel_state then
             panel_state = state

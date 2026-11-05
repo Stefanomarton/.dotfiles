@@ -71,11 +71,12 @@ end
 -- VM Windows a schermo intero nel workspace w11 (Super+Ctrl+W: vm_enter in keybindings.lua).
 -- Fisso: Looking Glass, lanciato dal workspace (on_created_empty).
 -- tm-laptop: on_created_empty non parte, quindi vm_enter lancia vm_launch se il viewer non c'è:
--- virt-viewer in kiosk, avvia la VM se è spenta e si chiude quando si spegne.
+-- virt-viewer a schermo intero, avvia la VM se è spenta. Niente --kiosk: apre una finestra per
+-- monitor, e con un esterno quella vuota prende lo schermo intero e copre la VM.
 local vm_on_created = { desktop = "looking-glass-client -F" }
 vm_launch = ({
-    ["tm-laptop"] = "pgrep -x virt-viewer >/dev/null || { virsh -c qemu:///system start tm-windows11 2>/dev/null; "
-                 .. "virt-viewer -c qemu:///system --attach --wait --kiosk --kiosk-quit on-disconnect tm-windows11; }",
+    ["tm-laptop"] = "pgrep -f '^virt-viewer ' >/dev/null || { virsh -c qemu:///system start tm-windows11 2>/dev/null; "
+                 .. "virt-viewer -c qemu:///system --attach --wait --full-screen tm-windows11; }",
 })[host]
 
 if vm_on_created[host] or vm_launch then
