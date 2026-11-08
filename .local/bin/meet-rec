@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Registra una chiamata: il microfono che usa davvero l'app (es. Meet in Chromium) + l'audio di sistema.
-# Uso: meet-rec          registra in primo piano (in ~/inbox/meet/meet-AAAA-MM-GG-HHMM/; fermare con q o un solo Ctrl+C)
+# Uso: meet-rec          registra in primo piano (in ~/inbox/automations/meet/meet-AAAA-MM-GG-HHMM/; fermare con q o un solo Ctrl+C)
 #      meet-rec toggle   avvia/ferma la registrazione come servizio utente "meet-rec", dopo conferma con rofi
 #                        (Super+Shift+R in Hyprland; il widget widgets/recorder mostra lo stato)
 # Il resto lo fa l'archivista sul server (CT 114 automations): quando il file è sincronizzato su Nextcloud e fermo da
@@ -26,7 +26,7 @@ if [[ ${1:-} == toggle ]]; then
 fi
 
 name="meet-$(date +%F-%H%M)"
-mkdir -p ~/inbox/meet/"$name" && cd ~/inbox/meet/"$name"
+mkdir -p ~/inbox/automations/meet/"$name" && cd ~/inbox/automations/meet/"$name"
 
 # Il microfono collegato a uno stream di registrazione già aperto (la chiamata); se nessuno, quello predefinito.
 mic=$(pw-dump | jq -r '

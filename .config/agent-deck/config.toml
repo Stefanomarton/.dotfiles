@@ -44,9 +44,3 @@ theme = "dark"
 url = "http://192.168.1.220:8080/v1/audio/transcriptions"
 key_file = "/run/user/1000/secrets/llama-swap-key"
 language = "it"
-
-# Risposta di regia letta a voce quando le scrivi con un vocale Telegram (bridge): testo su stdin,
-# WAV su stdout. agent-deck-tts = Piper (voce Paola) sul processore, definito in ~/.nixos
-# (hosts/desktop/user-services.nix, PATH del bridge). Senza questa sezione la risposta resta solo testo.
-[tts]
-command = "agent-deck-tts"

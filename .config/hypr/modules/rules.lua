@@ -118,6 +118,14 @@ hl.window_rule({
 hl.on("window.title", function(w)
     local prefix = "Bitwarden"
     if w.title:sub(1, #prefix) == prefix and w.class:lower() ~= "bitwarden" then
+        -- auto_group l'ha già messo nel gruppo col focus, e float su una scheda fa galleggiare tutto il gruppo
+        if w.group and not w.floating then
+            if w.group.size > 1 then
+                pcall(function() w.group:remove(w) end)
+            else
+                hl.dispatch(hl.dsp.group.toggle({ window = w }))
+            end
+        end
         hl.dispatch(hl.dsp.window.float({ action = "enable", window = w }))
         hl.dispatch(hl.dsp.window.resize({ x = 500, y = 800, relative = false, window = w }))
         hl.dispatch(hl.dsp.window.center({ window = w }))
