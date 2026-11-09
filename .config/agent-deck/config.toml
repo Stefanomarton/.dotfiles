@@ -44,3 +44,7 @@ theme = "dark"
 url = "http://192.168.1.220:8080/v1/audio/transcriptions"
 key_file = "/run/user/1000/secrets/llama-swap-key"
 language = "it"
+
+[voice]
+# local = whisper-voce + kokoro on llama-swap; "openai" = fallback (Realtime)
+backend = "local"
