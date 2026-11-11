@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# cargo wrapper: heavy subcommands take a machine-wide build slot (see build-slot), max 2 at once.
+# The real cargo is the next one in PATH (system or the dev shell's). Bypass: BUILD_SLOTS=0 cargo ...
+self=$(realpath "$0")
+real=
+IFS=: read -ra dirs <<<"$PATH"
+for d in "${dirs[@]}"; do
+  if [ -x "$d/cargo" ] && [ "$(realpath "$d/cargo")" != "$self" ]; then real=$d/cargo; break; fi
+done
+[ -n "$real" ] || { echo "cargo: il vero cargo non è nel PATH" >&2; exit 127; }
+slot=$(dirname "$self")/build-slot
+[ -x "$slot" ] || exec "$real" "$@"
+
+sub=
+for a in "$@"; do case $a in +*|-*) ;; *) sub=$a; break ;; esac; done
+# An editor's background check (rust-analyzer: --message-format=json...) must not queue behind builds.
+case " $* " in *" --message-format=json"*|*" --message-format json"*) exec "$real" "$@" ;; esac
+case $sub in
+  build|b|check|c|clippy|test|t|nextest|bench|doc|d|install|rustc|fix|llvm-cov|tarpaulin)
+    exec "$slot" "$real" "$@" ;;
+  run|r)
+    # Slot only while compiling: a `cargo run` server must not keep a slot for hours.
+    pre=() done=
+    for a in "$@"; do
+      [ "$a" = "--" ] && break
+      if [ -z "$done" ] && [ "$a" = "$sub" ]; then pre+=(build); done=1; else pre+=("$a"); fi
+    done
+    "$slot" "$real" "${pre[@]}" || exit $?
+    exec "$real" "$@" ;;
+esac
+exec "$real" "$@"

@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""build-slot CMD...: run a heavy build holding one of N machine-wide slots, niced.
+
+Why: on 10/11/2026 several Rust builds at once took the desktop to load 50. Sessions are
+not limited; heavy builds are. The `cargo` and `nix` wrappers next to this file call it.
+  BUILD_SLOTS=N      slots (default 2); 0 = no limit, only nice/ionice
+  BUILD_SLOT_WAIT=S  seconds to wait for a slot before starting anyway (default 1200)
+  CARGO_BUILD_JOBS   set to 12 unless already set (24 cores: two builds fill the machine, no more)
+A build started from inside a slot (BUILD_SLOT_HELD) runs directly: no deadlock on nesting.
+The lock is a flock on $XDG_RUNTIME_DIR/build-slots/N.lock, held by this process only
+(not inherited), so it is released when the build exits or is killed.
+Self-check: build-slot --test
+"""
+import fcntl
+import os
+import signal
+import subprocess
+import sys
+import time
+
+DIR = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or "/tmp", "build-slots")
+
+
+def acquire(n, wait, say=lambda m: print(f"build-slot: {m}", file=sys.stderr, flush=True)):
+    """Return an open, locked file, or None when n == 0 or no slot came free within `wait`."""
+    if n <= 0:
+        return None
+    os.makedirs(DIR, exist_ok=True)
+    end, told = time.monotonic() + wait, False
+    while True:
+        for i in range(1, n + 1):
+            f = open(os.path.join(DIR, f"{i}.lock"), "a+")
+            try:
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                f.close()
+                continue
+            f.seek(0), f.truncate(), f.write(f"{os.getpid()} {os.getcwd()}\n"), f.flush()
+            return f
+        if not told:
+            say(f"{n} build già in corso, aspetto un posto (al massimo {wait} s)")
+            told = True
+        if time.monotonic() >= end:
+            say(f"nessun posto dopo {wait} s, parto lo stesso")
+            return None
+        time.sleep(3)
+
+
+def main(argv):
+    if not argv:
+        sys.exit("uso: build-slot COMANDO [ARGOMENTI...]")
+    if os.environ.get("BUILD_SLOT_HELD"):
+        os.execvp(argv[0], argv)
+    slot = acquire(int(os.environ.get("BUILD_SLOTS", "2")), int(os.environ.get("BUILD_SLOT_WAIT", "1200")))
+    env = dict(os.environ, BUILD_SLOT_HELD="1")
+    env.setdefault("CARGO_BUILD_JOBS", "12")
+    try:
+        child = subprocess.Popen(["nice", "-n", "10", "ionice", "-c", "2", "-n", "7", *argv], env=env)
+    except OSError as e:
+        sys.exit(f"build-slot: {e}")
+    # Ctrl-C reaches the child by itself (same process group); TERM/HUP are passed on.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    for s in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(s, lambda num, _f: child.send_signal(num))
+    rc = child.wait()
+    del slot
+    sys.exit(128 - rc if rc < 0 else rc)
+
+
+def test():
+    global DIR
+    import tempfile
+    DIR = tempfile.mkdtemp()
+    quiet = lambda m: None
+    a, b = acquire(2, 0, quiet), acquire(2, 0, quiet)
+    assert a and b, "two slots must be free"
+    assert acquire(2, 0, quiet) is None, "third build must not get a slot"
+    a.close()
+    c = acquire(2, 0, quiet)
+    assert c, "a closed slot is free again"
+    assert acquire(0, 0, quiet) is None
+    me = os.path.abspath(__file__)
+    env = dict(os.environ, XDG_RUNTIME_DIR=DIR, BUILD_SLOTS="1", BUILD_SLOT_WAIT="30")
+    env.pop("BUILD_SLOT_HELD", None)
+    t = time.monotonic()
+    p1 = subprocess.Popen([me, "sleep", "2"], env=env)
+    time.sleep(0.5)
+    p2 = subprocess.run([me, "sh", "-c", "exit 7"], env=env, stderr=subprocess.DEVNULL)
+    assert p2.returncode == 7, "exit code passes through"
+    assert time.monotonic() - t >= 1.9, "second build waited for the first"
+    assert p1.wait() == 0
+    nested = subprocess.run([me, me, "true"], env=env, stderr=subprocess.PIPE, timeout=10)
+    assert nested.returncode == 0 and not nested.stderr, "nested build does not wait for itself"
+    print("ok")
+
+
+if __name__ == "__main__":
+    test() if sys.argv[1:] == ["--test"] else main(sys.argv[1:])

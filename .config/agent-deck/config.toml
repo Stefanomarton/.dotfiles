@@ -25,7 +25,7 @@ theme = "dark"
   max_lines = 10000
 
 [conductor]
-  heartbeat_interval = 15
+  heartbeat_interval = 30
   # Niente regole "ask" nei settings dei conductor: decide il loro permission mode (popup di conferma su session stop/start).
   permission_ask = false
 
@@ -48,3 +48,7 @@ language = "it"
 [voice]
 # local = whisper-voce + kokoro on llama-swap; "openai" = fallback (Realtime)
 backend = "local"
+
+# Rete di sicurezza (Stefano 11/11/2026: il limite vero è sulle build pesanti, non sulle sessioni).
+[group_defaults]
+  max_concurrent = 8

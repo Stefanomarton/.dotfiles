@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# nix wrapper: `nix build` takes a machine-wide build slot (see build-slot), and
+# `nix develop/shell ... -c cargo ...` goes through the cargo wrapper next to this file.
+# Everything else runs the real nix untouched. Bypass: BUILD_SLOTS=0 nix ...
+self=$(realpath "$0")
+here=$(dirname "$self")
+real=
+IFS=: read -ra dirs <<<"$PATH"
+for d in "${dirs[@]}"; do
+  if [ -x "$d/nix" ] && [ "$(realpath "$d/nix")" != "$self" ]; then real=$d/nix; break; fi
+done
+[ -n "$real" ] || { echo "nix: il vero nix non è nel PATH" >&2; exit 127; }
+[ -x "$here/build-slot" ] || exec "$real" "$@"
+
+case $1 in
+  build)
+    exec "$here/build-slot" "$real" "$@" ;;
+  develop|shell)
+    args=() prev=
+    for a in "$@"; do
+      case $prev in -c|--command) [ "$a" = cargo ] && a=$here/cargo ;; esac
+      args+=("$a"); prev=$a
+    done
+    exec "$real" "${args[@]}" ;;
+esac
+exec "$real" "$@"
