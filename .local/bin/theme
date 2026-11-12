@@ -26,7 +26,7 @@ import json, os, struct, subprocess, sys, tempfile, zlib
 STATE = os.path.expanduser("~/.local/state/theme")
 RADIUS = 4                      # controls and cards, as in the Tesla CSS
 FONT = "JuliaMono"   # one face everywhere: widgets, rofi, tofi, kitty, Emacs, GTK, Qt
-SPACE = os.path.expanduser("~/.local/share/wallpapers/space.jpg")
+WALLS = os.path.expanduser("~/.local/share/wallpapers")   # cerchi-*: made for this palette, 5120x1440
 
 # terminal colours 0-15: Tesla has none, these use its status colours
 TERM_DARK = ["#000000", "#e5675e", "#4cc38a", "#e6b071", "#6b8ff0", "#b08ce8", "#5cc8e0", "#c4c6c9",
@@ -37,18 +37,18 @@ TERM_LIGHT = ["#171a20", "#c62828", "#2e7d4f", "#8a5d00", "#3e6ae1", "#7b4fc4", 
 
 # bg = widget/popup surface, surface/surface2 = inputs, hover, chips, rule/ruleHi = 1px lines,
 # ink/ink2/ink3 = text, accent2 = hover and second highlight, soft = selected row,
-# desk = solid wallpaper (None: the space photo),
+# desk = wallpaper: a file in WALLS, or "#rrggbb" for a solid colour,
 # dim = scrim behind the pickers, opacity = kitty background
 THEMES = {
     "chiaro": dict(light=True, bg="#ffffff", surface="#f4f4f4", surface2="#eeeeee", rule="#e6e7e8",
                    ruleHi="#d0d1d3", ink="#171a20", ink2="#393c41", ink3="#6a6c70", accent="#3e6ae1",
                    accent2="#3457b1", soft="#ecf0fc", accentText="#ffffff", ok="#2e7d4f", warn="#8a5d00",
-                   danger="#c62828", desk="#e9eaec", dim=0.25, opacity=1.0, shadow="171a2022",
+                   danger="#c62828", desk="cerchi-chiaro.jpg", dim=0.25, opacity=1.0, shadow="171a2022",
                    term=TERM_LIGHT),
     "scuro":  dict(light=False, bg="#171a20", surface="#23262d", surface2="#2c3038", rule="#2b2e35",
                    ruleHi="#3a3e47", ink="#f2f2f2", ink2="#c4c6c9", ink3="#a3a6ab", accent="#6b8ff0",
                    accent2="#8aa6f3", soft="#1f2a46", accentText="#0d1220", ok="#4cc38a", warn="#e6b071",
-                   danger="#e5675e", desk=None, dim=0.45, opacity=0.95, shadow="00000088",
+                   danger="#e5675e", desk="cerchi-scuro.jpg", dim=0.45, opacity=0.95, shadow="00000088",
                    term=TERM_DARK),
     "nero":   dict(light=False, bg="#000000", surface="#0d0d0d", surface2="#161616", rule="#1f1f1f",
                    ruleHi="#2c2c31", ink="#f2f2f2", ink2="#d6d8db", ink3="#a3a6ab", accent="#7a9bf5",
@@ -198,8 +198,8 @@ def apply(name):
         write(os.path.join(STATE, fname), text)
     write(os.path.join(STATE, "name"), name + "\n")
 
-    wall = SPACE
-    if t["desk"]:
+    wall = os.path.join(WALLS, t["desk"])
+    if t["desk"].startswith("#"):
         wall = os.path.join(STATE, f"desk-{t['desk'][1:]}.png")
         write(wall, png(t["desk"]))
     link = os.path.join(STATE, "wallpaper")
@@ -241,6 +241,7 @@ def check():
             c = contrast(t[key], against)
             assert c >= ratio, f"{name}: {key} on {against} = {c:.2f}, needs {ratio}"
         assert len(t["term"]) == 16, name
+        assert t["desk"].startswith("#") or os.path.exists(os.path.join(WALLS, t["desk"])), name
         files = render(t)
         q = json.loads(files["theme.json"])
         assert all(len(v) == 7 and v[0] == "#" for k, v in q.items() if isinstance(v, str)), name
