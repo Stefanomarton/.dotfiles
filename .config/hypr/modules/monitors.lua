@@ -8,12 +8,9 @@
 
 -- Dalla dock HP (Thunderbolt Dock G2) i due monitor condividono un solo collegamento DP
 -- (MST, ~26 Gbit/s): G9 a 60 Hz + Xiaomi a 100 Hz è il massimo; col G9 a 120 Hz resta nero.
--- Fisso con la RX 580 (dal 13/11/2026): il G9 a 144 Hz non c'è (niente DSC) e con lo Xiaomi
--- a 144 Hz ogni modeset sul secondo monitor falliva (EINVAL) e Hyprland andava in abort.
-local desktop = host == "desktop"
 hl.monitor({
     output   = screens.main,
-    mode     = profile.laptop and "5120x1440@60" or desktop and "5120x1440@120" or "5120x1440@144",
+    mode     = profile.laptop and "5120x1440@60" or "5120x1440@144",
     position = "0x0",
     scale    = "1.066",
     vrr      = 0,   -- il G9 non annuncia adaptive sync: con misc.vrr = 2 ogni schermo intero tentava e rifaceva il modeset (nero)
@@ -21,7 +18,7 @@ hl.monitor({
 
 hl.monitor({
     output   = screens.side,
-    mode     = (profile.laptop or desktop) and "3440x1440@100" or "3440x1440@144",
+    mode     = profile.laptop and "3440x1440@100" or "3440x1440@144",
     position = "auto-center-up",
     scale    = "1",
 })
