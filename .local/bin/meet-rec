@@ -3,6 +3,7 @@
 # Uso: meet-rec          registra in primo piano (in ~/inbox/automations/meet/meet-AAAA-MM-GG-HHMM/; fermare con q o un solo Ctrl+C)
 #      meet-rec toggle   avvia/ferma la registrazione come servizio utente "meet-rec", dopo conferma con rofi
 #                        (Super+Shift+R in Hyprland; il widget widgets/recorder mostra lo stato)
+#      meet-rec start    avvia il servizio senza chiedere (il tocco sulla notifica di meet-watch è già la conferma)
 # Il resto lo fa l'archivista sul server (CT 114 automations): quando il file è sincronizzato su Nextcloud e fermo da
 # 2 minuti lo trascrive, manda la proposta su Telegram (Hermes) e dopo la conferma sposta la cartella. Qui solo la registrazione.
 set -euo pipefail
@@ -15,12 +16,13 @@ conferma() {
   [[ $scelta == "$2" ]]
 }
 
-if [[ ${1:-} == toggle ]]; then
+if [[ ${1:-} == toggle || ${1:-} == start ]]; then
   if systemctl --user is-active -q meet-rec; then
+    [[ $1 == start ]] && exit 0
     conferma "Registrazione in corso" "Ferma la registrazione" || exit 0
     exec systemctl --user stop meet-rec   # KillSignal=SIGINT: ffmpeg chiude il file pulito
   fi
-  conferma "Registratore chiamate" "Avvia la registrazione" || exit 0
+  [[ $1 == start ]] || conferma "Registratore chiamate" "Avvia la registrazione" || exit 0
   systemctl --user reset-failed meet-rec 2>/dev/null || true
   exec systemd-run --user --unit=meet-rec -q -p KillSignal=SIGINT -p SuccessExitStatus=255 -p TimeoutStopSec=10 "$0"
 fi

@@ -17,6 +17,8 @@ hl.on("hyprland.start", function ()
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/corner/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/volume/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/recorder/")
+         -- promemoria del registratore: notifica «Registra» quando una chiamata apre il microfono
+         hl.exec_cmd("systemd-run --user --unit=meet-watch -q ~/.local/bin/meet-watch")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/notifications/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/whichkey/")
          hl.exec_cmd("qs -p ~/.config/hypr/widgets/pomodoro/")

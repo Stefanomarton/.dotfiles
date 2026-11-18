@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Promemoria per meet-rec: quando un'app di chiamata (browser, Zoom, Teams…) apre il microfono da 10 s e non si sta
+# registrando, notifica «Registra» (clic = meet-rec start). Non registra mai da sola: le chiamate private restano fuori.
+# Se la registrazione era partita durante una chiamata, la ferma 60 s dopo che la chiamata ha chiuso il microfono.
+# Gira come servizio utente "meet-watch" (autostart di Hyprland).
+set -uo pipefail
+
+APP='chrom|firefox|brave|vivaldi|edge|zoom|teams|slack|discord|webcord|signal|telegram|whatsapp|skype|webex'
+REC=~/.local/bin/meet-rec
+
+# Un'app di chiamata tiene aperto il microfono? (stesso giro di pw-dump di meet-rec)
+in_chiamata() {
+  pw-dump 2>/dev/null | jq -e --arg app "$APP" '
+    (map(select(.type=="PipeWire:Interface:Node")) | INDEX(.id)) as $n
+    | any(.[] | select(.type=="PipeWire:Interface:Link") | .info;
+          $n[(.["output-node-id"]|tostring)].info.props["media.class"]=="Audio/Source"
+          and ($n[(.["input-node-id"]|tostring)].info.props
+               | .["media.class"]=="Stream/Input/Audio"
+                 and ((.["application.process.binary"] // "") + " " + (.["application.name"] // "")
+                      | test($app; "i"))))' >/dev/null
+}
+
+da=0 senza=0 avvisato=0 dalla_chiamata=0
+while sleep 5; do
+  if systemctl --user is-active -q meet-rec; then rec=1; else rec=0; dalla_chiamata=0; fi
+  if in_chiamata; then
+    senza=0 da=$((da + 5))
+    (( rec )) && dalla_chiamata=1
+    if (( !rec && !avvisato && da >= 10 )); then
+      avvisato=1
+      ( [[ $(notify-send -a "Registratore chiamate" -t 120000 -A registra=Registra "Chiamata in corso" \
+              "Non stai registrando. Clic per avviare meet-rec.") == registra ]] && "$REC" start ) &
+    fi
+  else
+    da=0 avvisato=0 senza=$((senza + 5))
+    if (( rec && dalla_chiamata && senza >= 60 )); then
+      systemctl --user stop meet-rec
+      notify-send -a "Registratore chiamate" "Registrazione fermata" "La chiamata è finita da un minuto."
+      dalla_chiamata=0
+    fi
+  fi
+done
