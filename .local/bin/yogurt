@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec nix shell nixpkgs#appimage-run -c appimage-run "$HOME/.local/opt/yogurt/Yogurt.AppImage" "$@"
