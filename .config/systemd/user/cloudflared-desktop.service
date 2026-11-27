@@ -1,0 +1,17 @@
+# Tunnel Cloudflare "desktop" (dwd-preview.marton.dev → localhost:8097). Token nel vault: cloudflared-desktop.env,
+# messo da secrets-sync in ~/.config/cloudflared-desktop/tunnel.env. Creato il 27/11/2026 al posto di desktop-agentdeck.
+# Installata con `systemctl --user enable --now ~/.dotfiles/.config/systemd/user/cloudflared-desktop.service`.
+[Unit]
+Description=Cloudflare tunnel desktop (dwd-preview)
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+EnvironmentFile=%h/.config/cloudflared-desktop/tunnel.env
+ExecStart=%h/.local/state/cloudflared-desktop-pkg/bin/cloudflared --no-autoupdate tunnel run
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
